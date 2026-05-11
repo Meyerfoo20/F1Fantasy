@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+:root {
+    --f1-red: #e10600;
+    --bg-black: #0b0b0b;
+    --card-gray: #161616;
+    --border-gray: #2a2a2a;
+}
+
+body { 
+    background-color: var(--bg-black); 
+    color: white; 
+    font-family: 'Inter', sans-serif; 
+    letter-spacing: -0.02em;
+    overflow-x: hidden;
+}
+
+.f1-red-text { color: var(--f1-red); }
+.bg-f1-red { background-color: var(--f1-red); }
+.border-f1 { border-color: var(--border-gray); }
+
+.hero-pattern {
+    background-image: linear-gradient(var(--border-gray) 1px, transparent 1px), 
+                      linear-gradient(90deg, var(--border-gray) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.1;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(225, 6, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0); }
+}
+
+.animate-pulse-red {
+    animation: pulse-red 2s infinite;
+}
+
+@media (max-width: 640px) {
+    .nav-text { display: none; }
+}

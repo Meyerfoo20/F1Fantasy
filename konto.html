@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Fantasy</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <nav class="border-b border-f1 sticky top-0 bg-black/90 backdrop-blur-sm z-50">
+        <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <i data-lucide="flag" class="f1-red-text w-6 h-6 md:w-7 md:h-7"></i>
+                F1<span class="f1-red-text">FANTASY</span>
+            </h1>
+            <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300">
+                <li>
+                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text">Hem</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text">Fantasy</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
+                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text">Konto</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="relative min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-12">
+        <div class="absolute inset-0 hero-pattern z-0"></div>
+        
+        <div class="relative z-10 w-full max-w-md">
+            <div class="bg-zinc-900/50 backdrop-blur-md border border-f1 p-8 rounded-2xl shadow-2xl">
+                <div class="text-center mb-8">
+                    <h2 id="form-title" class="text-3xl font-black italic uppercase tracking-tighter mb-2">Logga in</h2>
+                    <p id="form-subtitle" class="text-gray-400 text-sm">Välkommen tillbaka till depån!</p>
+                </div>
+
+                <form id="auth-form" class="space-y-5">
+                    <div id="username-field" class="hidden">
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Användarnamn</label>
+                        <input type="text" id="username" placeholder="F1_Fan_99" class="w-full bg-black border border-f1 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-f1-red transition">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">E-post</label>
+                        <input type="email" id="email" required placeholder="namn@epost.se" class="w-full bg-black border border-f1 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-f1-red transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Lösenord</label>
+                        <input type="password" id="password" required placeholder="••••••••" class="w-full bg-black border border-f1 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-f1-red transition">
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="w-full bg-f1-red hover:bg-red-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition transform hover:-translate-y-1 shadow-lg shadow-red-900/20 mt-4">
+                        Logga in
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center border-t border-f1 pt-6">
+                    <p class="text-gray-400 text-xs">
+                        <span id="toggle-text">Har du inget konto?</span>
+                        <button id="toggle-btn" class="f1-red-text font-bold hover:underline ml-1">Skapa ett här</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
+            authDomain: "f1-fantasy-e8204.firebaseapp.com",
+            projectId: "f1-fantasy-e8204",
+            storageBucket: "f1-fantasy-e8204.firebasestorage.app",
+            messagingSenderId: "952247160192",
+            appId: "1:952247160192:web:57bd2653326d5c7c7ec565",
+            measurementId: "G-2SJR82M124"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Hämta alla element
+        const authForm = document.getElementById('auth-form');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const usernameField = document.getElementById('username-field');
+        const formTitle = document.getElementById('form-title');
+        const formSubtitle = document.getElementById('form-subtitle');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleText = document.getElementById('toggle-text');
+
+        // Variabel för att hålla koll på läget (börjar som inloggning)
+        let isLogin = true;
+
+        // FUNKTION FÖR ATT VÄXLA VY
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Stoppa sidan från att ladda om
+            isLogin = !isLogin; // Byt läge
+
+            if (!isLogin) {
+                // Ändra till "SKAPA KONTO"
+                formTitle.innerText = "Skapa konto";
+                formSubtitle.innerText = "Starta din karriär som stallchef";
+                submitBtn.innerText = "Registrera stall";
+                toggleText.innerText = "Har du redan ett konto?";
+                toggleBtn.innerText = "Logga in istället";
+                usernameField.classList.remove('hidden'); // Visa användarnamn
+            } else {
+                // Ändra till "LOGGA IN"
+                formTitle.innerText = "Logga in";
+                formSubtitle.innerText = "Välkommen tillbaka till depån!";
+                submitBtn.innerText = "Logga in";
+                toggleText.innerText = "Har du inget konto?";
+                toggleBtn.innerText = "Skapa ett här";
+                usernameField.classList.add('hidden'); // Dölj användarnamn
+            }
+        });
+
+        // Hantera formuläret (Logga in eller Registrera)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+
+            try {
+                if (!isLogin) {
+                    // REGISTRERING
+                    if (!username) { alert("Vänligen välj ett användarnamn"); return; }
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", userCredential.user.uid), {
+                        username: username,
+                        email: email,
+                        budget: 100000000,
+                        team: []
+                    });
+                } else {
+                    // INLOGGNING
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                window.location.href = 'index.html';
+            } catch (error) {
+                alert("Fel: " + error.message);
+            }
+        });
+
+        // Kolla om redan inloggad
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    formTitle.innerText = `Välkommen, ${userData.username}`;
+                    formSubtitle.innerText = "Du är inloggad.";
+                    authForm.innerHTML = `<button onclick="window.location.href='index.html'" class="w-full bg-zinc-800 py-4 rounded-xl font-bold uppercase tracking-widest text-xs">Tillbaka till Hem</button>`;
+                    const footerToggle = document.querySelector('.mt-8.text-center');
+                    if (footerToggle) footerToggle.style.display = 'none';
+                }
+            }
+            lucide.createIcons();
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>

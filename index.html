@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="sv">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>F1 Fantasy</title>
+        
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <link rel="manifest" href="manifest.json">
+        <link rel="apple-touch-icon" href="logo.jpg">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="stylesheet" href="main.css">
+    </head>
+<body>
+
+    <nav class="border-b border-f1 sticky top-0 bg-black/90 backdrop-blur-sm z-50">
+        <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <i data-lucide="flag" class="f1-red-text w-6 h-6 md:w-7 md:h-7"></i>
+                F1<span class="f1-red-text">FANTASY</span>
+            </h1>
+            <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300">
+                <li>
+                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text">Hem</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text">Fantasy</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
+                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text">Konto</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="next-race-bar" class="bg-zinc-950 py-3 border-b border-f1 text-sm">
+        <div class="container mx-auto px-4 md:px-6 flex items-center justify-between">
+            <div class="flex items-start md:items-center space-x-3">
+                <div class="mt-1.5 md:mt-0 w-2.5 h-2.5 bg-f1-red rounded-full animate-pulse-red shrink-0"></div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+                    <span class="text-gray-400 font-medium uppercase tracking-wider text-[10px] md:text-xs">Nästa Grand Prix:</span>
+                    <div id="race-info" class="text-white font-bold italic flex flex-wrap items-center gap-2">
+                        Laddar race-info...
+                    </div>
+                </div>
+            </div>
+            <div class="text-gray-500 text-xs flex items-center gap-2 hidden md:flex italic">
+                <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                Data i realtid
+            </div>
+        </div>
+    </div>
+
+    <header class="relative min-h-[60vh] md:h-[80vh] flex items-center justify-center text-center overflow-hidden border-b border-f1 px-4">
+        <div class="absolute inset-0 hero-pattern z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-10"></div>
+        
+        <div class="relative z-20 max-w-5xl py-12">
+            <div class="inline-flex items-center gap-2 bg-f1-red/10 border border-f1-red/30 f1-red-text px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6">
+                <i data-lucide="zap" class="w-4 h-4"></i> Säsongen 2026 är öppen
+            </div>
+            <h2 class="text-4xl md:text-8xl font-extrabold uppercase mb-6 italic tracking-tighter leading-[1.1]">
+                Bygg ditt <br> <span class="f1-red-text">FANTASY LAG</span>
+            </h2>
+            <p class="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Ta kontrollen över ditt egna F1-stall. Välj förare, konstruktör och strategier baserat på <strong class="text-white">realtidsdata</strong> från banan.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button onclick="window.location.href='fantasy.html'" class="w-full sm:w-auto bg-f1-red hover:bg-red-700 text-white px-10 py-4 md:px-12 md:py-5 rounded-xl font-bold transition transform hover:-translate-y-1 uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg shadow-red-900/20">
+                    Skapa ditt lag <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <footer class="border-t border-f1 py-12 md:py-16 bg-black">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter mb-6 flex justify-center items-center gap-2">
+                <i data-lucide="flag" class="f1-red-text w-6 h-6"></i>
+                F1<span class="f1-red-text">FANTASY</span>
+            </h1>
+
+            <p class="text-gray-600 text-[10px] md:text-xs max-w-md mx-auto leading-loose">
+                © 2026 F1 Fantasy Project. Inofficiellt-projekt. <br class="hidden md:block">
+                All data tillhandahålls via OpenF1 API.
+            </p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
+            authDomain: "f1-fantasy-e8204.firebaseapp.com",
+            projectId: "f1-fantasy-e8204",
+            storageBucket: "f1-fantasy-e8204.firebasestorage.app",
+            messagingSenderId: "952247160192",
+            appId: "1:952247160192:web:57bd2653326d5c7c7ec565"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    
+        lucide.createIcons();
+    
+        const countryToCode = {
+            "Bahrain": "bh", "Saudi Arabia": "sa", "Australia": "au", "Japan": "jp",
+            "China": "cn", "USA": "us", "United States": "us", "Miami": "us", "Monaco": "mc",
+            "Canada": "ca", "Spain": "es", "Austria": "at", "United Kingdom": "gb",
+            "Great Britain": "gb", "Hungary": "hu", "Belgium": "be", "Netherlands": "nl",
+            "Italy": "it", "Azerbaijan": "az", "Singapore": "sg", "Mexico": "mx",
+            "Brazil": "br", "Qatar": "qa", "Abu Dhabi": "ae", "UAE": "ae"
+        };
+    
+        async function fetchNextRace() {
+            const raceInfoElement = document.getElementById('race-info');
+            try {
+                const response = await fetch('https://api.openf1.org/v1/sessions?session_name=Race');
+                const sessions = await response.json();
+                const now = new Date();
+                const upcoming = sessions
+                    .filter(s => new Date(s.date_start) > now)
+                    .sort((a, b) => new Date(a.date_start) - new Date(b.date_start))[0];
+    
+                if (upcoming) {
+                    const raceDate = new Date(upcoming.date_start).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+                    const countryCode = countryToCode[upcoming.country_name] || "un";
+                    const flagUrl = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+    
+                    raceInfoElement.innerHTML = `
+                        <img src="${flagUrl}" class="w-5 h-auto rounded-sm shrink-0" alt="Flag">
+                        <span class="flex flex-wrap items-center gap-2">
+                            <span class="text-white">${upcoming.country_name}</span>
+                            <span class="text-gray-500 font-normal text-xs">(${upcoming.circuit_short_name})</span>
+                            <span class="f1-red-text font-bold">${raceDate}</span>
+                        </span>
+                    `;
+                }
+            } catch (error) { console.error(error); }
+        }
+    
+        // 2. Kolla inloggningsstatus med Firebase
+        onAuthStateChanged(auth, async (user) => {
+            const authLink = document.getElementById('auth-nav-link');
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const username = userDoc.data().username;
+                    authLink.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> <span class="nav-text">${username}</span>`;
+                    lucide.createIcons();
+                }
+            }
+        });
+    
+        fetchNextRace();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>

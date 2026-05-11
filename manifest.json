@@ -1,0 +1,28 @@
+{
+    "short_name": "F1 Fantasy",
+    "name": "F1 Fantasy League 2026",
+    "icons": [
+      {
+        "src": "logo.jpg",
+        "type": "image/jpeg",
+        "sizes": "192x192"
+      },
+      {
+        "src": "logo.jpg",
+        "type": "image/jpeg",
+        "sizes": "512x512"
+      },
+      {
+        "src": "logo.jpg",
+        "type": "image/jpeg",
+        "sizes": "512x512",
+        "purpose": "any maskable"
+      }
+    ],
+    "start_url": "./fantasy.html",
+    "background_color": "#0a0a0a",
+    "display": "standalone",
+    "scope": "./",
+    "theme_color": "#e10600",
+    "description": "F1 Fantasy League med realtidsuppdateringar"
+  }
