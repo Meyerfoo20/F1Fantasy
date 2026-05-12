@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" href="logo.jpg">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>F1 Fantasy</title>
+    <title>F1 Fantasy - Team Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="main.css">
@@ -41,7 +41,6 @@
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
         }
 
-        /* Knapp inuti slotten (Röda krysset/Soptunnan) */
         .btn-slot-action {
             background: rgba(225, 6, 0, 0.9);
             opacity: 0;
@@ -50,7 +49,6 @@
         }
         .slot:hover .btn-slot-action { opacity: 1; transform: translateY(0); }
 
-        /* Förhandsgranskningskort i "Mitt Stall" */
         .driver-card-preview {
             border-left: 4px solid transparent;
             transition: transform 0.2s;
@@ -60,28 +58,69 @@
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
         .toast { background: #111; border-left: 4px solid var(--f1-red); padding: 12px 24px; margin-bottom: 8px; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Mobilanpassningar */
+        @media (max-width: 768px) {
+            .pitch-container {
+                padding: 1.5rem !important; /* Mindre padding på mobilen */
+                min-height: auto !important;
+                border-radius: 1.5rem !important;
+            }
+            
+            .slot {
+                height: 180px !important; /* Lägre höjd så allt får plats */
+                border-radius: 1.5rem !important;
+            }
+
+            .slot-constructor {
+                height: 100px !important;
+            }
+
+            h1 { font-size: 1.25rem !important; }
+            #nav-budget { font-size: 1.25rem !important; }
+        }
+
+        /* Förbättra scrolling på mobilen */
+        #market-list {
+            -webkit-overflow-scrolling: touch;
+            max-height: 70vh !important;
+        }
     </style>
 </head>
 <body>
     <div id="toast-container"></div>
 
-    <nav class="border-b border-white/10 sticky top-0 bg-black/95 backdrop-blur-xl z-50">
+    <nav class="border-b border-f1 sticky top-0 bg-black/90 backdrop-blur-sm z-50">
         <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
-                <i data-lucide="zap" class="fill-red-600 text-red-600"></i>
-                F1<span class="text-red-600 font-black">FANTASY</span>
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <i data-lucide="flag" class="f1-red-text w-6 h-6 md:w-7 md:h-7"></i>
+                F1<span class="f1-red-text">FANTASY</span>
             </h1>
-            <div class="flex items-center gap-6">
-                <div class="text-right">
-                    <p id="nav-username" class="text-gray-500 font-bold text-[9px] uppercase tracking-widest mb-1"></p>
-                    <p id="nav-budget" class="text-white font-black text-2xl italic tracking-tighter leading-none"></p>
-                </div>
-            </div>
+            <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300 items-center">
+                <li class="mr-4 text-right hidden sm:block">
+                    <p id="nav-budget" class="text-white font-black text-lg italic tracking-tighter leading-none"></p>
+                </li>
+                <li>
+                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text hidden md:inline">Hem</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text hidden md:inline">Fantasy</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
+                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text" id="nav-username">Konto</span>
+                    </a>
+                </li>
+            </ul>
         </div>
     </nav>
 
     <main class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10" id="management-view">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-10" id="management-view">
             <div class="lg:col-span-7">
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="text-2xl font-black uppercase italic tracking-tight flex items-center gap-3">
@@ -131,7 +170,7 @@
                             <thead class="bg-black/60 text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
                                 <tr>
                                     <th class="p-8 text-left w-24">Pos</th>
-                                    <th class="p-8 text-left">Stall</th>
+                                    <th class="p-8 text-left">Stall & Poäng</th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboard-body"></tbody>
@@ -158,285 +197,448 @@
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
-        const firebaseConfig = {
-            apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
-            authDomain: "f1-fantasy-e8204.firebaseapp.com",
-            projectId: "f1-fantasy-e8204",
-            storageBucket: "f1-fantasy-e8204.firebasestorage.app",
-            messagingSenderId: "952247160192",
-            appId: "1:952247160192:web:57bd2653326d5c7c7ec565"
-        };
-    
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-    
-        let currentUser = null;
-        let userData = null;
-        let currentView = 'drivers';
-        let allUsers = [];
+        let lastRaceName = "Laddar...";
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+                import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+                import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
+                    authDomain: "f1-fantasy-e8204.firebaseapp.com",
+                    projectId: "f1-fantasy-e8204",
+                    storageBucket: "f1-fantasy-e8204.firebasestorage.app",
+                    messagingSenderId: "952247160192",
+                    appId: "1:952247160192:web:57bd2653326d5c7c7ec565"
+                };
+            
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+            
+                let currentUser = null;
+                let userData = null;
+                let currentView = 'drivers';
+                let allUsers = [];
 
-        const teamColors = {
-            'Mercedes': '#27F4D2', 'Ferrari': '#E8002D', 'McLaren': '#FF8000',
-            'Audi': '#F30421', 'Red Bull': '#3671C6', 'Cadillac': '#FFFFFF',
-            'Aston Martin': '#229971', 'Alpine': '#0093CC', 'RB': '#6692FF',
-            'Haas': '#B6BABD', 'Williams': '#64C4FF'
-        };
+                const teamColors = {
+                    'Mercedes': '#27F4D2', 'Ferrari': '#E8002D', 'McLaren': '#FF8000',
+                    'Audi': '#F30421', 'Red Bull': '#3671C6', 'Cadillac': '#FFFFFF',
+                    'Aston Martin': '#229971', 'Alpine': '#0093CC', 'RB': '#6692FF',
+                    'Haas': '#B6BABD', 'Williams': '#64C4FF'
+                };
 
-        const data = {
-            drivers: [
-                { id: 'rus', name: 'George Russell', team: 'Mercedes', price: 26000000 },
-                { id: 'ant', name: 'Kimi Antonelli', team: 'Mercedes', price: 32000000 },
-                { id: 'gas', name: 'Pierre Gasly', team: 'Alpine', price: 12000000 },
-                { id: 'col', name: 'Franco Colapinto', team: 'Alpine', price: 7000000 },
-                { id: 'alo', name: 'Fernando Alonso', team: 'Aston Martin', price: 5000000 },
-                { id: 'str', name: 'Lance Stroll', team: 'Aston Martin', price: 4500000 },
-                { id: 'hul', name: 'Nico Hulkenberg', team: 'Audi', price: 11000000 },
-                { id: 'bor', name: 'Gabriel Bortoleto', team: 'Audi', price: 10000000 },
-                { id: 'per', name: 'Sergio Perez', team: 'Cadillac', price: 4000000 },
-                { id: 'bot', name: 'Valtteri Bottas', team: 'Cadillac', price: 4000000 },
-                { id: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', price: 22000000 },
-                { id: 'lec', name: 'Charles Leclerc', team: 'Ferrari', price: 26000000 },
-                { id: 'oco', name: 'Esteban Ocon', team: 'Haas', price: 11000000 },
-                { id: 'bea', name: 'Oliver Bearman', team: 'Haas', price: 11000000 },
-                { id: 'nor', name: 'Lando Norris', team: 'McLaren', price: 27000000 },
-                { id: 'pia', name: 'Oscar Piastri', team: 'McLaren', price: 24000000 },
-                { id: 'law', name: 'Liam Lawson', team: 'RB', price: 12000000 },
-                { id: 'lin', name: 'Arvid Lindblad', team: 'RB', price: 11000000 },
-                { id: 'ver', name: 'Max Verstappen', team: 'Red Bull', price: 22000000 },
-                { id: 'had', name: 'Isack Hadjar', team: 'Red Bull', price: 15000000 },
-                { id: 'sai', name: 'Carlos Sainz', team: 'Williams', price: 13000000 },
-                { id: 'alb', name: 'Alexander Albon', team: 'Williams', price: 13000000 }
-            ],
-            constructors: [
-                { id: 'c_mercedes', name: 'Mercedes-AMG', team: 'Mercedes', price: 30000000 },
-                { id: 'c_ferrari', name: 'Scuderia Ferrari', team: 'Ferrari', price: 23000000 },
-                { id: 'c_mclaren', name: 'McLaren F1', team: 'McLaren', price: 22000000 },
-                { id: 'c_redbull', name: 'Red Bull Racing', team: 'Red Bull', price: 17000000 },
-                { id: 'c_audi', name: 'Audi F1 Team', team: 'Audi', price: 12500000 },
-                { id: 'c_williams', name: 'Williams Racing', team: 'Williams', price: 12000000 },
-                { id: 'c_alpine', name: 'Alpine F1 Team', team: 'Alpine', price: 10000000 },
-                { id: 'c_rb', name: 'Visa Cash App RB', team: 'RB', price: 9000000 },
-                { id: 'c_haas', name: 'Haas F1 Team', team: 'Haas', price: 8000000 },
-                { id: 'c_aston', name: 'Aston Martin Honda', team: 'Aston Martin', price: 5000000 },
-                { id: 'c_cadillac', name: 'Andretti Cadillac', team: 'Cadillac', price: 5000000 }
-            ]
-        };
+                const data = {
+                    drivers: [
+                        { id: 'rus', name: 'George Russell', team: 'Mercedes', price: 26000000 },
+                        { id: 'ant', name: 'Kimi Antonelli', team: 'Mercedes', price: 32000000 },
+                        { id: 'gas', name: 'Pierre Gasly', team: 'Alpine', price: 12000000 },
+                        { id: 'col', name: 'Franco Colapinto', team: 'Alpine', price: 7000000 },
+                        { id: 'alo', name: 'Fernando Alonso', team: 'Aston Martin', price: 5000000 },
+                        { id: 'str', name: 'Lance Stroll', team: 'Aston Martin', price: 4500000 },
+                        { id: 'hul', name: 'Nico Hulkenberg', team: 'Audi', price: 11000000 },
+                        { id: 'bor', name: 'Gabriel Bortoleto', team: 'Audi', price: 10000000 },
+                        { id: 'per', name: 'Sergio Perez', team: 'Cadillac', price: 4000000 },
+                        { id: 'bot', name: 'Valtteri Bottas', team: 'Cadillac', price: 4000000 },
+                        { id: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', price: 22000000 },
+                        { id: 'lec', name: 'Charles Leclerc', team: 'Ferrari', price: 26000000 },
+                        { id: 'oco', name: 'Esteban Ocon', team: 'Haas', price: 11000000 },
+                        { id: 'bea', name: 'Oliver Bearman', team: 'Haas', price: 11000000 },
+                        { id: 'nor', name: 'Lando Norris', team: 'McLaren', price: 27000000 },
+                        { id: 'pia', name: 'Oscar Piastri', team: 'McLaren', price: 24000000 },
+                        { id: 'law', name: 'Liam Lawson', team: 'RB', price: 12000000 },
+                        { id: 'lin', name: 'Arvid Lindblad', team: 'RB', price: 11000000 },
+                        { id: 'ver', name: 'Max Verstappen', team: 'Red Bull', price: 22000000 },
+                        { id: 'had', name: 'Isack Hadjar', team: 'Red Bull', price: 15000000 },
+                        { id: 'sai', name: 'Carlos Sainz', team: 'Williams', price: 13000000 },
+                        { id: 'alb', name: 'Alexander Albon', team: 'Williams', price: 13000000 }
+                    ],
+                    constructors: [
+                        { id: 'c_mercedes', name: 'Mercedes-AMG', team: 'Mercedes', price: 30000000 },
+                        { id: 'c_ferrari', name: 'Scuderia Ferrari', team: 'Ferrari', price: 23000000 },
+                        { id: 'c_mclaren', name: 'McLaren F1', team: 'McLaren', price: 22000000 },
+                        { id: 'c_redbull', name: 'Red Bull Racing', team: 'Red Bull', price: 17000000 },
+                        { id: 'c_audi', name: 'Audi F1 Team', team: 'Audi', price: 12500000 },
+                        { id: 'c_williams', name: 'Williams Racing', team: 'Williams', price: 12000000 },
+                        { id: 'c_alpine', name: 'Alpine F1 Team', team: 'Alpine', price: 10000000 },
+                        { id: 'c_rb', name: 'Visa Cash App RB', team: 'RB', price: 9000000 },
+                        { id: 'c_haas', name: 'Haas F1 Team', team: 'Haas', price: 8000000 },
+                        { id: 'c_aston', name: 'Aston Martin Honda', team: 'Aston Martin', price: 5000000 },
+                        { id: 'c_cadillac', name: 'Andretti Cadillac', team: 'Cadillac', price: 5000000 }
+                    ]
+                };
 
-        window.showToast = (msg) => {
-            const container = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = 'toast rounded-2xl font-black text-[10px] uppercase text-white shadow-2xl';
-            t.innerText = msg;
-            container.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
-        };
+                // --- DYNAMISKT POÄNGSYSTEM ---
+                async function calculatePointsForUser(uid, teamIds, constructorId) {
+                    try {
+                        const userRef = doc(db, "users", uid);
+                        const userSnap = await getDoc(userRef);
+                        const uData = userSnap.data();
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                await refreshData();
-                if (userData.constructor && (userData.team || []).length === 4) {
+                        // 1. Hämta info om det absolut senaste racet
+                        const infoRes = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/results.json`);
+                        const infoData = await infoRes.json();
+                        const raceInfo = infoData.MRData.RaceTable.Races[0];
+                        
+                        const season = raceInfo.season;
+                        const round = parseInt(raceInfo.round); // Nuvarande runda från API
+                        const raceDate = new Date(raceInfo.date);
+                        const currentRaceName = `${raceInfo.raceName} ${season}`;
+
+                        const MONTREAL_ROUND = 5; 
+
+                        if (round < MONTREAL_ROUND) {
+                            console.log(`Racet ${currentRaceName} (Runda ${round}) är före Kanada. Inga poäng delas ut.`);
+                            await updateDoc(userRef, { 
+                                lastRacePoints: 0,
+                                lastRaceName: currentRaceName,
+                                pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Väntar på Kanada GP (Race 5)" } }
+                            });
+                            return 0;
+                        }
+
+                        // 2. Kontrollera skapelsedatum (Datumspärr för nya konton)
+                        const accountCreatedDate = uData.createdAt ? new Date(uData.createdAt) : new Date("2000-01-01");
+                        if (accountCreatedDate > raceDate) {
+                            await updateDoc(userRef, { 
+                                lastRacePoints: 0,
+                                lastRaceName: currentRaceName,
+                                pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Konto skapat efter race" } }
+                            });
+                            return 0;
+                        }
+
+                        // 3. Hämta kvalresultat för bonuspoäng
+                        const qualyRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/qualifying.json`);
+                        const qualyData = await qualyRes.json();
+                        
+                        const raceResults = raceInfo.Results || [];
+                        const qualyResults = qualyData.MRData.RaceTable.Races[0]?.QualifyingResults || [];
+
+                        let lastRacePoints = 0;
+                        let breakdown = { drivers: {}, constructor: { points: 0, detail: "" } };
+
+                        // Beräkna poäng för förare
+                        teamIds.forEach(driverId => {
+                            const driverData = data.drivers.find(d => d.id === driverId);
+                            const lastName = driverData.name.split(' ').pop().toLowerCase();
+                            
+                            let dPoints = 0;
+                            const raceResult = raceResults.find(r => r.Driver.familyName.toLowerCase() === lastName);
+                            if (raceResult) dPoints += parseInt(raceResult.points) || 0;
+
+                            const qualyResult = qualyResults.find(q => q.Driver.familyName.toLowerCase() === lastName);
+                            if (qualyResult && qualyResult.position === "1") dPoints += 4; // Pole bonus
+
+                            breakdown.drivers[driverId] = { points: dPoints, detail: `${dPoints} P (${raceInfo.raceName})` };
+                            lastRacePoints += dPoints;
+                        });
+
+                        // Beräkna poäng för konstruktör
+                        if (constructorId) {
+                            const constructorData = data.constructors.find(c => c.id === constructorId);
+                            const teamPoints = raceResults
+                                .filter(r => r.Constructor.name.includes(constructorData.team))
+                                .reduce((sum, r) => sum + parseInt(r.points), 0);
+                            
+                            breakdown.constructor = { points: teamPoints, detail: `${teamPoints} P (Team Total)` };
+                            lastRacePoints += teamPoints;
+                        }
+
+                        const currentTotal = uData.seasonTotalPoints || 0;
+                        await updateDoc(userRef, { 
+                            seasonTotalPoints: currentTotal + lastRacePoints,
+                            lastRacePoints: lastRacePoints,
+                            lastRaceName: currentRaceName,
+                            pointsBreakdown: breakdown
+                        });
+                        
+                        return lastRacePoints;
+                    } catch (error) {
+                        console.error("Poängfel:", error);
+                        return 0;
+                    }
+                }
+
+                window.showToast = (msg) => {
+                    const container = document.getElementById('toast-container');
+                    const t = document.createElement('div');
+                    t.className = 'toast rounded-2xl font-black text-[10px] uppercase text-white shadow-2xl';
+                    t.innerText = msg;
+                    container.appendChild(t);
+                    setTimeout(() => t.remove(), 3000);
+                };
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        await refreshData();
+                        if (userData && userData.constructor && (userData.team || []).length === 4) {
+                            showLeague();
+                        } else {
+                            renderSlots();
+                            renderMarket();
+                        }
+                    } else { 
+                        window.location.href = 'konto.html'; 
+                    }
+                });
+
+                async function refreshData() {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userDoc.exists()) {
+                        userData = userDoc.data();
+                        document.getElementById('nav-username').innerText = userData.username || "User";
+                        document.getElementById('nav-budget').innerText = `$${((userData.budget || 0) / 1000000).toFixed(1)}M`;
+                    }
+                }
+
+                window.switchView = (view) => {
+                    currentView = view;
+                    const btnD = document.getElementById('tab-drivers');
+                    const btnC = document.getElementById('tab-constructors');
+                    btnD.className = view === 'drivers' ? "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-red-600 text-white" : "flex-1 py-4 rounded-2xl text-xs font-black uppercase text-gray-500 hover:bg-white/5";
+                    btnC.className = view === 'constructors' ? "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-red-600 text-white" : "flex-1 py-4 rounded-2xl text-xs font-black uppercase text-gray-500 hover:bg-white/5";
+                    renderMarket();
+                };
+
+                function renderMarket() {
+                    const list = document.getElementById('market-list');
+                    const items = [...data[currentView]].sort((a, b) => b.price - a.price);
+                    list.innerHTML = items.map(item => {
+                        const isOwned = (userData.team || []).includes(item.id) || userData.constructor === item.id;
+                        const color = teamColors[item.team];
+                        return `
+                            <div class="market-card p-3 md:p-5 bg-white/5 rounded-3xl flex justify-between items-center border border-white/5 hover:bg-white/10 transition-all">
+                                <div class="flex items-center gap-3 md:gap-4">
+                                    <div class="w-1.5 h-10 md:h-12 rounded-full" style="background: ${color}"></div>
+                                    <div>
+                                        <p class="text-[7px] md:text-[8px] uppercase font-black tracking-widest opacity-40">${item.team}</p>
+                                        <h4 class="font-bold text-white text-sm md:text-lg leading-tight">${item.name}</h4>
+                                        <p class="font-black text-xs md:text-sm text-red-600">$${item.price / 1000000}M</p>
+                                    </div>
+                                </div>
+                                <button onclick="handlePurchase('${item.id}', ${item.price}, '${currentView}')" 
+                                    class="px-4 md:px-6 py-2 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase transition-all ${isOwned ? 'bg-red-600/20 text-red-600 border border-red-600/30' : 'bg-white text-black hover:scale-105 shadow-lg'}">
+                                    ${isOwned ? 'SÄLJ' : 'KÖP'}
+                                </button>
+                            </div>`;
+                    }).join('');
+                }
+
+                function renderSlots() {
+                    const constSlot = document.getElementById('slot-constructor');
+                    const hasConstructor = userData.constructor && userData.constructor !== "";
+                    const myConst = hasConstructor ? data.constructors.find(c => c.id === userData.constructor) : null;
+
+                    if (myConst) {
+                        constSlot.classList.add('filled');
+                        constSlot.style.borderColor = teamColors[myConst.team];
+                        constSlot.innerHTML = `
+                            <div class="relative w-full h-full flex flex-col items-center justify-center p-4">
+                                <p class="text-[9px] uppercase font-black text-gray-500 mb-1 tracking-widest">Konstruktör</p>
+                                <p class="text-xl md:text-3xl font-black italic uppercase tracking-tighter text-center" style="color:${teamColors[myConst.team]}">${myConst.name}</p>
+                                <button onclick="handlePurchase('${myConst.id}', ${myConst.price}, 'constructors')" class="btn-slot-action absolute top-2 right-2 p-2 rounded-full text-white">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>`;
+                    } else {
+                        constSlot.classList.remove('filled');
+                        constSlot.innerHTML = `<span class="text-gray-700 text-[10px] font-black uppercase tracking-widest">Välj Stall</span>`;
+                    }
+
+                    for (let i = 0; i < 4; i++) {
+                        const slot = document.getElementById(`slot-driver-${i}`);
+                        const driverId = (userData.team || [])[i];
+                        const driver = data.drivers.find(d => d.id === driverId);
+                        if (driver) {
+                            slot.classList.add('filled');
+                            slot.style.borderColor = teamColors[driver.team];
+                            slot.innerHTML = `
+                                <img src="F1driversIMG/${driver.id}.png" class="driver-image-edit">
+                                <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black via-black/80 to-transparent z-10">
+                                    <p class="text-[7px] md:text-[8px] font-black uppercase tracking-widest opacity-80" style="color:${teamColors[driver.team]}">${driver.team}</p>
+                                    <p class="text-sm md:text-xl font-black uppercase italic text-white">${driver.name}</p>
+                                </div>
+                                <button onclick="handlePurchase('${driver.id}', ${driver.price}, 'drivers')" class="btn-slot-action absolute top-2 md:top-4 right-2 md:right-4 p-2 md:p-3 rounded-full text-white z-20 shadow-xl">
+                                    <i data-lucide="x" class="w-4 md:w-5 h-4 md:h-5"></i>
+                                </button>`;
+                        } else {
+                            slot.classList.remove('filled');
+                            slot.innerHTML = `<span class="text-gray-700 text-[10px] font-black uppercase tracking-widest">Välj Förare</span>`;
+                        }
+                    }
+                    lucide.createIcons();
+                }
+                
+                window.handlePurchase = async (id, price, type) => {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    if (!userData.team) userData.team = [];
+                    const currentConstructor = (userData.constructor === undefined || userData.constructor === "") ? null : userData.constructor;
+                    const isOwned = type === 'drivers' ? userData.team.includes(id) : currentConstructor === id;
+                    
+                    try {
+                        if (isOwned) {
+                            const updateData = type === 'drivers' 
+                                ? { team: arrayRemove(id), budget: (userData.budget || 0) + price }
+                                : { constructor: null, budget: (userData.budget || 0) + price };
+                            await updateDoc(userRef, updateData);
+                            if (type === 'drivers') userData.team = userData.team.filter(t => t !== id);
+                            else userData.constructor = null;
+                            userData.budget += price;
+                            showToast("Sälj genomförd!");
+                        } else {
+                            if (type === 'drivers') {
+                                if (userData.team.length >= 4) return showToast("Stallet är fullt!");
+                                if ((userData.budget || 0) < price) return showToast("Budgeten räcker inte!");
+                                await updateDoc(userRef, { team: arrayUnion(id), budget: (userData.budget || 0) - price });
+                                userData.team.push(id);
+                            } else {
+                                if (typeof currentConstructor === 'string' && currentConstructor.length > 0) return showToast("Sälj nuvarande stall först!");
+                                if ((userData.budget || 0) < price) return showToast("Budgeten räcker inte!");
+                                await updateDoc(userRef, { constructor: id, budget: (userData.budget || 0) - price });
+                                userData.constructor = id;
+                            }
+                            userData.budget -= price;
+                            showToast("Köp genomfört!");
+                        }
+                        document.getElementById('nav-budget').innerText = `$${(userData.budget / 1000000).toFixed(1)}M`;
+                        renderSlots();
+                        renderMarket();
+                    } catch (error) {
+                        showToast("Något gick fel!");
+                    }
+                };
+
+                window.confirmTeam = async () => {
+                    if (!userData.constructor || (userData.team || []).length < 4) return showToast("Ditt stall är inte komplett!");
+                    await calculatePointsForUser(currentUser.uid, userData.team, userData.constructor);
+                    await refreshData();
                     showLeague();
-                } else {
+                };
+
+                async function showLeague() {
+                    document.getElementById('management-view').classList.add('hidden');
+                    document.getElementById('league-view').classList.remove('hidden');
+                    renderPreview(userData);
+                    
+                    const querySnapshot = await getDocs(collection(db, "users"));
+                    allUsers = querySnapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id }));
+
+                    // Sortera på säsongstotalen
+                    allUsers.sort((a, b) => (b.seasonTotalPoints || 0) - (a.seasonTotalPoints || 0));
+                    
+                    const leaderboardBody = document.getElementById('leaderboard-body');
+                    leaderboardBody.innerHTML = allUsers.map((u, i) => {
+                        const isCurrentUser = u.uid === currentUser.uid;
+                        return `
+                        <tr class="leaderboard-row group cursor-pointer border-b border-white/5 hover:bg-white/[0.02] transition-colors" onclick="viewOtherTeam('${u.uid}')">
+                            <td class="p-4 md:p-6 w-16 md:w-24">
+                                <div class="flex items-center justify-center">
+                                    <span class="text-xl md:text-3xl font-black italic ${i < 3 ? 'text-red-600' : 'text-zinc-700'} tracking-tighter">
+                                        ${String(i + 1).padStart(2, '0')}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="p-4 md:p-6">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-black text-white text-base md:text-xl uppercase tracking-tight ${isCurrentUser ? 'text-red-500' : ''}">
+                                                ${u.username}
+                                            </span>
+                                            ${isCurrentUser ? '<span class="bg-red-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Du</span>' : ''}
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <div class="px-2 py-1 bg-zinc-800 rounded-md">
+                                                <p class="text-[9px] text-zinc-400 font-black uppercase leading-none">Säsongstotal</p>
+                                                <p class="text-white font-black text-sm md:text-base italic leading-tight">${u.seasonTotalPoints || 0} <span class="text-[10px] not-italic text-zinc-500">PTS</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex flex-col items-end">
+                                        <p class="text-[9px] text-red-600 font-black uppercase tracking-widest mb-1">Senaste Race</p>
+                                        <div class="flex items-center gap-1 text-white font-black text-xl md:text-2xl italic tracking-tighter">
+                                            <span class="text-xs text-red-600 mt-1">+</span>${u.lastRacePoints || 0}
+                                        </div>
+                                        <p class="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter max-w-[100px] truncate">
+                                            ${u.lastRaceName || 'Ingen data'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                window.viewOtherTeam = (uid) => {
+                    const user = allUsers.find(u => u.uid === uid);
+                    if (user) {
+                        document.getElementById('preview-title').innerText = `${user.username}s Stall`;
+                        renderPreview(user);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                };
+
+                window.editTeam = () => {
+                    document.getElementById('management-view').classList.remove('hidden');
+                    document.getElementById('league-view').classList.add('hidden');
                     renderSlots();
                     renderMarket();
-                }
-            } else { window.location.href = 'konto.html'; }
-        });
+                };
 
-        async function refreshData() {
-            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-            userData = userDoc.data();
-            document.getElementById('nav-username').innerText = userData.username;
-            document.getElementById('nav-budget').innerText = `$${((userData.budget || 0) / 1000000).toFixed(1)}M`;
-        }
+                function renderPreview(user) {
+                    const summaryDiv = document.getElementById('my-team-summary');
+                    if (!summaryDiv) return;
+                    const myDrivers = data.drivers.filter(d => (user.team || []).includes(d.id));
+                    const myConst = data.constructors.find(c => c.id === user.constructor);
+                    const breakdown = user.pointsBreakdown || { drivers: {}, constructor: {} };
+                    const raceName = user.lastRaceName || "Senaste Racet";
 
-        window.switchView = (view) => {
-            currentView = view;
-            const btnD = document.getElementById('tab-drivers');
-            const btnC = document.getElementById('tab-constructors');
-            btnD.className = view === 'drivers' ? "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-red-600 text-white" : "flex-1 py-4 rounded-2xl text-xs font-black uppercase text-gray-500 hover:bg-white/5";
-            btnC.className = view === 'constructors' ? "flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all bg-red-600 text-white" : "flex-1 py-4 rounded-2xl text-xs font-black uppercase text-gray-500 hover:bg-white/5";
-            renderMarket();
-        };
-
-        function renderMarket() {
-            const list = document.getElementById('market-list');
-            const items = [...data[currentView]].sort((a, b) => b.price - a.price);
-            list.innerHTML = items.map(item => {
-                const isOwned = (userData.team || []).includes(item.id) || userData.constructor === item.id;
-                const color = teamColors[item.team];
-                return `
-                    <div class="market-card p-5 bg-white/5 rounded-3xl flex justify-between items-center border border-white/5 hover:bg-white/10 transition-all">
-                        <div class="flex items-center gap-4">
-                            <div class="w-1.5 h-12 rounded-full" style="background: ${color}"></div>
-                            <div>
-                                <p class="text-[8px] uppercase font-black tracking-widest opacity-40">${item.team}</p>
-                                <h4 class="font-bold text-white text-lg">${item.name}</h4>
-                                <p class="font-black text-sm text-red-600">$${item.price / 1000000}M</p>
+                    summaryDiv.innerHTML = `
+                        <div class="space-y-6">
+                            <div class="text-center p-6 bg-red-600/10 rounded-[2rem] border border-red-600/20 mb-4">
+                                <p class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">Resultat: ${raceName}</p>
+                                <h3 class="text-4xl md:text-5xl font-black italic text-white tracking-tighter">+${user.lastRacePoints || 0} <span class="text-sm uppercase not-italic text-red-600">Poäng</span></h3>
                             </div>
-                        </div>
-                        <button onclick="handlePurchase('${item.id}', ${item.price}, '${currentView}')" 
-                            class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${isOwned ? 'bg-red-600/20 text-red-600 border border-red-600/30' : 'bg-white text-black hover:scale-105 shadow-lg'}">
-                            ${isOwned ? 'SÄLJ' : 'KÖP'}
-                        </button>
-                    </div>`;
-            }).join('');
-        }
 
-        function renderSlots() {
-            const constSlot = document.getElementById('slot-constructor');
-            const myConst = data.constructors.find(c => c.id === userData.constructor);
-            if (myConst) {
-                constSlot.classList.add('filled');
-                constSlot.style.borderColor = teamColors[myConst.team];
-                constSlot.innerHTML = `
-                    <div class="relative w-full h-full flex flex-col items-center justify-center">
-                        <p class="text-[9px] uppercase font-black text-gray-500 mb-1 tracking-widest">Konstruktör</p>
-                        <p class="text-3xl font-black italic uppercase tracking-tighter" style="color:${teamColors[myConst.team]}">${myConst.name}</p>
-                        <button onclick="handlePurchase('${myConst.id}', ${myConst.price}, 'constructors')" class="btn-slot-action absolute top-2 right-2 p-2 rounded-full text-white">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>`;
-            } else {
-                constSlot.classList.remove('filled');
-                constSlot.innerHTML = `<span class="text-gray-700 text-[10px] font-black uppercase tracking-widest">Välj Stall</span>`;
-            }
-
-            for (let i = 0; i < 4; i++) {
-                const slot = document.getElementById(`slot-driver-${i}`);
-                const driverId = (userData.team || [])[i];
-                const driver = data.drivers.find(d => d.id === driverId);
-                if (driver) {
-                    slot.classList.add('filled');
-                    slot.style.borderColor = teamColors[driver.team];
-                    slot.innerHTML = `
-                        <img src="F1driversIMG/${driver.id}.png" class="driver-image-edit">
-                        <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent z-10">
-                            <p class="text-[8px] font-black uppercase tracking-widest opacity-80" style="color:${teamColors[driver.team]}">${driver.team}</p>
-                            <p class="text-xl font-black uppercase italic text-white">${driver.name}</p>
-                        </div>
-                        <button onclick="handlePurchase('${driver.id}', ${driver.price}, 'drivers')" class="btn-slot-action absolute top-4 right-4 p-3 rounded-full text-white z-20 shadow-xl">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>`;
-                } else {
-                    slot.classList.remove('filled');
-                    slot.innerHTML = `<span class="text-gray-700 text-[10px] font-black uppercase tracking-widest">Välj Förare</span>`;
-                }
-            }
-            lucide.createIcons();
-        }
-
-        window.handlePurchase = async (id, price, type) => {
-            const userRef = doc(db, "users", currentUser.uid);
-            const isOwned = type === 'drivers' ? (userData.team || []).includes(id) : userData.constructor === id;
-            
-            if (isOwned) {
-                if (type === 'drivers') {
-                    await updateDoc(userRef, { team: arrayRemove(id), budget: (userData.budget || 0) + price });
-                } else {
-                    await updateDoc(userRef, { constructor: null, budget: (userData.budget || 0) + price });
-                }
-                showToast("Sälj genomförd!");
-            } else {
-                if (type === 'drivers') {
-                    if ((userData.team || []).length >= 4) return showToast("Stallet är fullt!");
-                    if ((userData.budget || 0) < price) return showToast("Budgeten räcker inte!");
-                    await updateDoc(userRef, { team: arrayUnion(id), budget: (userData.budget || 0) - price });
-                } else {
-                    if (userData.constructor) return showToast("Sälj nuvarande stall först!");
-                    if ((userData.budget || 0) < price) return showToast("Budgeten räcker inte!");
-                    await updateDoc(userRef, { constructor: id, budget: (userData.budget || 0) - price });
-                }
-                showToast("Köp genomfört!");
-            }
-            await refreshData();
-            renderSlots();
-            renderMarket();
-        };
-
-        window.confirmTeam = () => {
-            if (!userData.constructor || (userData.team || []).length < 4) return showToast("Ditt stall är inte komplett!");
-            showLeague();
-        };
-
-        async function showLeague() {
-            document.getElementById('management-view').classList.add('hidden');
-            document.getElementById('league-view').classList.remove('hidden');
-            renderPreview(userData);
-            
-            const leaderboardBody = document.getElementById('leaderboard-body');
-            const querySnapshot = await getDocs(collection(db, "users"));
-            allUsers = [];
-            querySnapshot.forEach(doc => {
-                const d = doc.data();
-                d.uid = doc.id;
-                allUsers.push(d);
-            });
-            
-            leaderboardBody.innerHTML = allUsers.map((u, i) => `
-                <tr class="leaderboard-row group cursor-pointer" onclick="viewOtherTeam('${u.uid}')">
-                    <td class="p-8 text-gray-700 italic font-black text-2xl group-hover:text-red-600 transition-colors">#${i+1}</td>
-                    <td class="p-8">
-                        <div class="flex items-center justify-between">
-                            <div class="font-black text-white text-xl italic uppercase tracking-tight">${u.username || 'Ghost Team'}</div>
-                            <i data-lucide="chevron-right" class="text-zinc-700 w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                    </td>
-                </tr>`).join('');
-            lucide.createIcons();
-        }
-
-        window.viewOtherTeam = (uid) => {
-            const user = allUsers.find(u => u.uid === uid);
-            if (user) {
-                document.getElementById('preview-title').innerText = `${user.username}s Stall`;
-                renderPreview(user);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        };
-
-        window.editTeam = () => {
-            document.getElementById('management-view').classList.remove('hidden');
-            document.getElementById('league-view').classList.add('hidden');
-            renderSlots();
-            renderMarket();
-        };
-
-        function renderPreview(user) {
-            const summaryDiv = document.getElementById('my-team-summary');
-            const myDrivers = data.drivers.filter(d => (user.team || []).includes(d.id));
-            const myConst = data.constructors.find(c => c.id === user.constructor);
-
-            summaryDiv.innerHTML = `
-                <div class="space-y-6">
-                    <div class="p-6 bg-black rounded-3xl border-l-[6px] shadow-lg" style="border-color: ${myConst ? teamColors[myConst.team] : '#222'}">
-                        <p class="text-[9px] uppercase text-gray-500 font-black mb-1">Konstruktör</p>
-                        <p class="text-white font-black italic uppercase text-2xl tracking-tighter">${myConst ? myConst.name : 'Ej vald'}</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 gap-4">
-                        ${myDrivers.map(d => `
-                        <div class="driver-card-preview p-5 rounded-[1.8rem] flex items-center gap-6 border border-white/5" 
-                             style="background: linear-gradient(135deg, ${teamColors[d.team]}20 0%, rgba(0,0,0,0.9) 100%); border-left-color: ${teamColors[d.team]}">
-                            <div class="w-16 h-16 rounded-2xl bg-zinc-800 overflow-hidden flex-shrink-0 border border-white/10 shadow-2xl">
-                                <img src="F1driversIMG/${d.id}.png" class="w-full h-full object-cover object-top">
+                            ${myConst ? `
+                            <div class="p-5 bg-black rounded-3xl border-l-[6px] flex justify-between items-center" style="border-color: ${teamColors[myConst.team]}">
+                                <div>
+                                    <p class="text-[8px] uppercase text-gray-500 font-black mb-1">Konstruktör</p>
+                                    <p class="text-white font-black italic uppercase text-xl tracking-tighter">${myConst.name}</p>
+                                </div>
+                                <p class="text-red-600 font-black text-xl italic">${breakdown.constructor?.points || 0} P</p>
+                            </div>` : ''}
+                            
+                            <div class="grid grid-cols-1 gap-3">
+                                ${myDrivers.map(d => {
+                                    const dStats = breakdown.drivers?.[d.id] || { points: 0, detail: 'Deltog ej' };
+                                    return `
+                                    <div class="p-4 rounded-[1.5rem] flex items-center justify-between border border-white/5" 
+                                        style="background: linear-gradient(135deg, ${teamColors[d.team]}15 0%, rgba(0,0,0,0.9) 100%); border-left: 4px solid ${teamColors[d.team]}">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden border border-white/10">
+                                                <img src="F1driversIMG/${d.id}.png" class="w-full h-full object-cover object-top" onerror="this.src='F1driversIMG/default.png'">
+                                            </div>
+                                            <div>
+                                                <p class="text-[7px] font-black uppercase tracking-widest" style="color:${teamColors[d.team]}">${d.team}</p>
+                                                <p class="text-white font-bold italic uppercase text-md leading-tight">${d.name}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-white font-black text-lg italic">${dStats.points} P</p>
+                                            <p class="text-[7px] text-gray-400 font-bold uppercase">${dStats.detail}</p>
+                                        </div>
+                                    </div>`;
+                                }).join('')}
                             </div>
-                            <div>
-                                <p class="text-[8px] font-black uppercase tracking-[0.2em] mb-1" style="color:${teamColors[d.team]}">${d.team}</p>
-                                <p class="text-white font-bold italic uppercase text-lg leading-tight">${d.name}</p>
+                            <div class="pt-4 border-t border-white/5 flex justify-between items-center px-2">
+                                <p class="text-[9px] font-black uppercase text-zinc-500">Säsongstotal:</p>
+                                <p class="text-white font-black italic">${user.seasonTotalPoints || 0} P</p>
                             </div>
-                        </div>`).join('')}
-                    </div>
-                </div>`;
-        }
-
-        lucide.createIcons();
+                        </div>`;
+                }
+                lucide.createIcons();
     </script>
 </body>
 </html>
