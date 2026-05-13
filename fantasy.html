@@ -85,6 +85,29 @@
             -webkit-overflow-scrolling: touch;
             max-height: 70vh !important;
         }
+
+        /* Stilren tabell-fix */
+        #leaderboard-body tr:last-child td {
+            border-bottom: none;
+        }
+
+        .leaderboard-row {
+            transition: transform 0.2s ease;
+        }
+
+        .leaderboard-row:active {
+            transform: scale(0.98);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Ta bort scrollbar-design men behåll funktion */
+        #market-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        #market-list::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -92,21 +115,21 @@
 
     <nav class="border-b border-f1 sticky top-0 bg-black/90 backdrop-blur-sm z-50">
         <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
-                <i data-lucide="flag" class="f1-red-text w-6 h-6 md:w-7 md:h-7"></i>
-                F1<span class="f1-red-text">FANTASY</span>
-            </h1>
+            <div class="flex flex-col">
+                <h1 class="text-lg md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                    <i data-lucide="flag" class="f1-red-text w-5 h-5 md:w-7 md:h-7"></i>
+                    F1<span class="f1-red-text">FANTASY</span>
+                </h1>
+                <p id="nav-budget" class="text-white font-black text-xs md:text-lg italic tracking-tighter leading-none mt-1 sm:mt-0"></p>
+            </div>
             <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300 items-center">
-                <li class="mr-4 text-right hidden sm:block">
-                    <p id="nav-budget" class="text-white font-black text-lg italic tracking-tighter leading-none"></p>
-                </li>
                 <li>
-                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                    <a href="index.html" class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
                         <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text hidden md:inline">Hem</span>
                     </a>
                 </li>
                 <li>
-                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                    <a href="fantasy.html" class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
                         <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text hidden md:inline">Fantasy</span>
                     </a>
                 </li>
@@ -267,47 +290,41 @@
                     ]
                 };
 
-                // --- DYNAMISKT POÄNGSYSTEM ---
                 async function calculatePointsForUser(uid, teamIds, constructorId) {
                     try {
                         const userRef = doc(db, "users", uid);
                         const userSnap = await getDoc(userRef);
                         const uData = userSnap.data();
 
-                        // 1. Hämta info om det absolut senaste racet
+                        // 1. Hämta huvudresultat
                         const infoRes = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/results.json`);
                         const infoData = await infoRes.json();
                         const raceInfo = infoData.MRData.RaceTable.Races[0];
                         
                         const season = raceInfo.season;
-                        const round = parseInt(raceInfo.round); // Nuvarande runda från API
+                        const round = parseInt(raceInfo.round);
                         const raceDate = new Date(raceInfo.date);
                         const currentRaceName = `${raceInfo.raceName} ${season}`;
 
-                        const MONTREAL_ROUND = 5; 
-
-                        if (round < MONTREAL_ROUND) {
-                            console.log(`Racet ${currentRaceName} (Runda ${round}) är före Kanada. Inga poäng delas ut.`);
+                        // Kanada-spärr (Runda 5)
+                        if (round < 5) {
                             await updateDoc(userRef, { 
                                 lastRacePoints: 0,
                                 lastRaceName: currentRaceName,
-                                pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Väntar på Kanada GP (Race 5)" } }
+                                pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Väntar på Kanada GP" } }
                             });
                             return 0;
                         }
 
-                        // 2. Kontrollera skapelsedatum (Datumspärr för nya konton)
-                        const accountCreatedDate = uData.createdAt ? new Date(uData.createdAt) : new Date("2000-01-01");
-                        if (accountCreatedDate > raceDate) {
-                            await updateDoc(userRef, { 
-                                lastRacePoints: 0,
-                                lastRaceName: currentRaceName,
-                                pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Konto skapat efter race" } }
-                            });
-                            return 0;
-                        }
+                        // 2. Hämta Sprint-resultat (om det fanns en sprint denna helg)
+                        let sprintResults = [];
+                        try {
+                            const sprintRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/sprint.json`);
+                            const sprintData = await sprintRes.json();
+                            sprintResults = sprintData.MRData.RaceTable.Races[0]?.SprintResults || [];
+                        } catch (e) { console.log("Ingen sprint denna helg"); }
 
-                        // 3. Hämta kvalresultat för bonuspoäng
+                        // 3. Hämta Kval (för Pole Position)
                         const qualyRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/qualifying.json`);
                         const qualyData = await qualyRes.json();
                         
@@ -317,46 +334,76 @@
                         let lastRacePoints = 0;
                         let breakdown = { drivers: {}, constructor: { points: 0, detail: "" } };
 
-                        // Beräkna poäng för förare
+                        // Beräkna Förare
                         teamIds.forEach(driverId => {
                             const driverData = data.drivers.find(d => d.id === driverId);
                             const lastName = driverData.name.split(' ').pop().toLowerCase();
-                            
                             let dPoints = 0;
+                            let details = [];
+
+                            // Huvudrace poäng
                             const raceResult = raceResults.find(r => r.Driver.familyName.toLowerCase() === lastName);
-                            if (raceResult) dPoints += parseInt(raceResult.points) || 0;
+                            if (raceResult) {
+                                const p = parseInt(raceResult.points) || 0;
+                                dPoints += p;
+                                if (p > 0) details.push(`${p} P (Race)`);
 
+                                // Snabbaste varv bonus (+1p)
+                                // API:et markerar snabbaste varv med rank "1" under FastestLap
+                                if (raceResult.FastestLap?.rank === "1") {
+                                    dPoints += 1;
+                                    details.push(`1 P (FL)`);
+                                }
+                            }
+
+                            // Sprint poäng (8,7,6,5,4,3,2,1)
+                            const sprintResult = sprintResults.find(s => s.Driver.familyName.toLowerCase() === lastName);
+                            if (sprintResult) {
+                                const sp = parseInt(sprintResult.points) || 0;
+                                dPoints += sp;
+                                if (sp > 0) details.push(`${sp} P (Sprint)`);
+                            }
+
+                            // Pole Position (+4p)
                             const qualyResult = qualyResults.find(q => q.Driver.familyName.toLowerCase() === lastName);
-                            if (qualyResult && qualyResult.position === "1") dPoints += 4; // Pole bonus
+                            if (qualyResult && qualyResult.position === "1") {
+                                dPoints += 4;
+                                details.push(`4 P (Pole)`);
+                            }
 
-                            breakdown.drivers[driverId] = { points: dPoints, detail: `${dPoints} P (${raceInfo.raceName})` };
+                            breakdown.drivers[driverId] = { 
+                                points: dPoints, 
+                                detail: details.length > 0 ? details.join(' + ') : '0 P' 
+                            };
                             lastRacePoints += dPoints;
                         });
 
-                        // Beräkna poäng för konstruktör
+                        // Beräkna Konstruktör (Summan av stallets race-poäng + sprint-poäng)
                         if (constructorId) {
                             const constructorData = data.constructors.find(c => c.id === constructorId);
-                            const teamPoints = raceResults
-                                .filter(r => r.Constructor.name.includes(constructorData.team))
-                                .reduce((sum, r) => sum + parseInt(r.points), 0);
                             
-                            breakdown.constructor = { points: teamPoints, detail: `${teamPoints} P (Team Total)` };
-                            lastRacePoints += teamPoints;
+                            const teamRacePoints = raceResults
+                                .filter(r => r.Constructor.name.includes(constructorData.team))
+                                .reduce((sum, r) => sum + (parseInt(r.points) || 0), 0);
+
+                            const teamSprintPoints = sprintResults
+                                .filter(s => s.Constructor.name.includes(constructorData.team))
+                                .reduce((sum, s) => sum + (parseInt(s.points) || 0), 0);
+                            
+                            const totalCPoints = teamRacePoints + teamSprintPoints;
+                            breakdown.constructor = { points: totalCPoints, detail: `${totalCPoints} P (Team Total)` };
+                            lastRacePoints += totalCPoints;
                         }
 
-                        const currentTotal = uData.seasonTotalPoints || 0;
+                        // Spara
                         await updateDoc(userRef, { 
-                            seasonTotalPoints: currentTotal + lastRacePoints,
+                            seasonTotalPoints: (uData.seasonTotalPoints || 0) + lastRacePoints,
                             lastRacePoints: lastRacePoints,
                             lastRaceName: currentRaceName,
                             pointsBreakdown: breakdown
                         });
-                        
                         return lastRacePoints;
-                    } catch (error) {
-                        console.error("Poängfel:", error);
-                        return 0;
-                    }
+                    } catch (error) { console.error(error); return 0; }
                 }
 
                 window.showToast = (msg) => {
@@ -524,50 +571,46 @@
                     const querySnapshot = await getDocs(collection(db, "users"));
                     allUsers = querySnapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id }));
 
-                    // Sortera på säsongstotalen
                     allUsers.sort((a, b) => (b.seasonTotalPoints || 0) - (a.seasonTotalPoints || 0));
                     
                     const leaderboardBody = document.getElementById('leaderboard-body');
                     leaderboardBody.innerHTML = allUsers.map((u, i) => {
                         const isCurrentUser = u.uid === currentUser.uid;
+                        // Skapa en färg för de 3 bästa
+                        const rankColor = i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-zinc-600';
+                        
                         return `
-                        <tr class="leaderboard-row group cursor-pointer border-b border-white/5 hover:bg-white/[0.02] transition-colors" onclick="viewOtherTeam('${u.uid}')">
-                            <td class="p-4 md:p-6 w-16 md:w-24">
-                                <div class="flex items-center justify-center">
-                                    <span class="text-xl md:text-3xl font-black italic ${i < 3 ? 'text-red-600' : 'text-zinc-700'} tracking-tighter">
-                                        ${String(i + 1).padStart(2, '0')}
-                                    </span>
-                                </div>
+                        <tr class="group cursor-pointer transition-all duration-300 hover:bg-white/[0.03]" onclick="viewOtherTeam('${u.uid}')">
+                            <td class="py-8 px-4 md:px-8 border-b border-white/5">
+                                <span class="text-2xl md:text-4xl font-black italic ${rankColor} tracking-tighter">
+                                    ${i + 1}
+                                </span>
                             </td>
-                            <td class="p-4 md:p-6">
+                            <td class="py-8 pr-4 md:pr-8 border-b border-white/5">
                                 <div class="flex justify-between items-center">
-                                    <div class="flex flex-col">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-black text-white text-base md:text-xl uppercase tracking-tight ${isCurrentUser ? 'text-red-500' : ''}">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-white text-lg md:text-2xl uppercase tracking-tighter ${isCurrentUser ? 'f1-red-text' : ''}">
                                                 ${u.username}
                                             </span>
-                                            ${isCurrentUser ? '<span class="bg-red-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Du</span>' : ''}
+                                            ${isCurrentUser ? '<span class="text-[8px] border border-red-600 f1-red-text px-2 py-0.5 rounded font-black uppercase tracking-widest">Du</span>' : ''}
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <div class="px-2 py-1 bg-zinc-800 rounded-md">
-                                                <p class="text-[9px] text-zinc-400 font-black uppercase leading-none">Säsongstotal</p>
-                                                <p class="text-white font-black text-sm md:text-base italic leading-tight">${u.seasonTotalPoints || 0} <span class="text-[10px] not-italic text-zinc-500">PTS</span></p>
-                                            </div>
-                                        </div>
+                                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Total: ${u.seasonTotalPoints || 0} PTS</p>
                                     </div>
-                                    <div class="text-right flex flex-col items-end">
-                                        <p class="text-[9px] text-red-600 font-black uppercase tracking-widest mb-1">Senaste Race</p>
-                                        <div class="flex items-center gap-1 text-white font-black text-xl md:text-2xl italic tracking-tighter">
-                                            <span class="text-xs text-red-600 mt-1">+</span>${u.lastRacePoints || 0}
+                                    
+                                    <div class="text-right">
+                                        <div class="inline-flex flex-col items-end bg-zinc-900/50 px-4 py-2 rounded-xl border border-white/5 group-hover:border-red-600/30 transition-colors">
+                                            <p class="text-[8px] text-red-600 font-black uppercase tracking-widest mb-1">Senaste</p>
+                                            <span class="text-xl md:text-2xl font-black italic text-white leading-none">
+                                                +${u.lastRacePoints || 0}
+                                            </span>
                                         </div>
-                                        <p class="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter max-w-[100px] truncate">
-                                            ${u.lastRaceName || 'Ingen data'}
-                                        </p>
                                     </div>
                                 </div>
                             </td>
                         </tr>`;
                     }).join('');
+                    lucide.createIcons();
                 }
 
                 window.viewOtherTeam = (uid) => {
