@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>F1 Fantasy - Pro Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="main.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap');
+
+        :root { --f1-red: #e10600; }
+        body { background-color: #050505; color: #fff; font-family: 'Titillium Web', sans-serif; -webkit-font-smoothing: antialiased; }
+        .f1-red-text { color: var(--f1-red); }
+        .bg-f1-red { background-color: var(--f1-red); }
+        
+        .glass-panel { 
+            background: rgba(10, 10, 10, 0.8); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.05); 
+        }
+        
+        .tab-active { 
+            background: var(--f1-red);
+            color: white;
+            box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
+        }
+
+        /* Färg-splash detaljer */
+        .color-splash {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 60px;
+            background: linear-gradient(90deg, var(--team-color-alpha) 0%, transparent 100%);
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        @media (min-width: 768px) {
+            .color-splash { width: 150px; }
+        }
+
+        .team-border {
+            position: absolute;
+            left: 0;
+            top: 15%;
+            height: 70%;
+            width: 3px;
+            background: var(--team-color);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 15px var(--team-color);
+        }
+
+        .driver-img-container {
+            width: 32px;
+            height: 32px;
+            background: #111;
+            border: 1px solid var(--team-color-alpha);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .driver-img-container { width: 50px; height: 50px; }
+        }
+
+        .pos-bg {
+            position: absolute;
+            font-size: 2.5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--team-color);
+            opacity: 0.04;
+            z-index: 0;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @media (min-width: 768px) {
+            .pos-bg { font-size: 3.5rem; left: 20px; }
+        }
+
+        /* Fixerad layout för att slippa scroll */
+        .col-pos { width: 45px; }
+        .col-wins { width: 35px; }
+        .col-pts { width: 65px; }
+        
+        @media (min-width: 768px) {
+            .col-pos { width: 100px; }
+            .col-wins { width: 80px; }
+            .col-pts { width: 120px; }
+        }
+    </style>
+</head>
+<body class="pb-24 overflow-x-hidden">
+
+    <nav class="border-b border-f1 sticky top-0 bg-black/90 backdrop-blur-sm z-50">
+        <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <i data-lucide="flag" class="f1-red-text w-6 h-6 md:w-7 md:h-7"></i>
+                F1<span class="f1-red-text">FANTASY</span>
+            </h1>
+            <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300">
+                <li>
+                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Hem</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Fantasy</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="stats.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Stats</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
+                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Konto</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-2 md:px-4 pt-6 md:pt-10 max-w-5xl">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-10 gap-4 px-2">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="bg-f1-red text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded italic">LIVE</span>
+                    <span class="text-zinc-500 text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase">2026</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black italic uppercase tracking-tighter">Standings</h2>
+            </div>
+            
+            <div class="flex bg-white/5 p-1 rounded-xl border border-white/10 self-start">
+                <button id="tab-drivers" onclick="switchStats('drivers')" class="px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all tab-active">Förare</button>
+                <button id="tab-constructors" onclick="switchStats('constructors')" class="px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500 transition-all">Stall</button>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl md:rounded-[2.5rem] overflow-hidden">
+            <table class="w-full text-left border-collapse table-fixed">
+                <thead>
+                    <tr class="border-b border-white/5 bg-white/[0.02]">
+                        <th class="col-pos py-4 md:py-6 px-2 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-center">Pos</th>
+                        <th id="name-header" class="py-4 md:py-6 px-2 text-[8px] md:text-[10px] font-black uppercase text-zinc-500">Namn</th>
+                        <th class="col-wins py-4 md:py-6 px-1 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-center">R</th>
+                        <th class="col-wins py-4 md:py-6 px-1 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-center">S</th>
+                        <th class="col-pts py-4 md:py-6 px-4 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-right">Pts</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-body" class="divide-y divide-white/[0.03]"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
+            authDomain: "f1-fantasy-e8204.firebaseapp.com",
+            projectId: "f1-fantasy-e8204",
+            storageBucket: "f1-fantasy-e8204.firebasestorage.app",
+            messagingSenderId: "952247160192",
+            appId: "1:952247160192:web:57bd2653326d5c7c7ec565"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const teamColors = {
+            'Mercedes': '#27F4D2', 'Ferrari': '#E8002D', 'McLaren': '#FF8000',
+            'Red Bull': '#3671C6', 'Aston Martin': '#229971', 'Alpine F1 Team': '#0093CC',
+            'RB F1 Team': '#6692FF', 'Haas F1 Team': '#B6BABD', 'Williams': '#64C4FF', 'Audi': '#e10600', 'Cadillac F1 Team': '#fff'
+        };
+
+        let currentTab = 'drivers';
+        let statsData = { drivers: [], constructors: [] };
+
+        onAuthStateChanged(auth, async (user) => {
+            const authLink = document.getElementById('auth-nav-link');
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    authLink.innerHTML = `<span class="flex items-center gap-2"><i data-lucide=\"user\" class=\"w-3 h-3 text-f1-red\"></i>${userDoc.data().username}</span>`;
+                    lucide.createIcons();
+                }
+            }
+        });
+
+        async function fetchAllStats() {
+            try {
+                const [dRes, cRes, sRes] = await Promise.all([
+                    fetch('https://api.jolpi.ca/ergast/f1/current/driverStandings.json'),
+                    fetch('https://api.jolpi.ca/ergast/f1/current/constructorStandings.json'),
+                    fetch('https://api.jolpi.ca/ergast/f1/current/sprint.json')
+                ]);
+                const dData = await dRes.json();
+                const cData = await cRes.json();
+                const sData = await sRes.json();
+
+                const sprintWinsMap = {};
+                const teamSprintWinsMap = {};
+                
+                (sData.MRData.RaceTable.Races || []).forEach(race => {
+                    if (race.SprintResults && race.SprintResults[0]) {
+                        const winner = race.SprintResults[0];
+                        sprintWinsMap[winner.Driver.driverId] = (sprintWinsMap[winner.Driver.driverId] || 0) + 1;
+                        teamSprintWinsMap[winner.Constructor.name] = (teamSprintWinsMap[winner.Constructor.name] || 0) + 1;
+                    }
+                });
+
+                statsData.drivers = dData.MRData.StandingsTable.StandingsLists[0].DriverStandings.map(s => ({
+                    rank: s.position,
+                    id: s.Driver.driverId,
+                    lastName: s.Driver.familyName, 
+                    name: s.Driver.givenName + " " + s.Driver.familyName,
+                    team: s.Constructors[0].name,
+                    wins: s.wins,
+                    sprints: sprintWinsMap[s.Driver.driverId] || 0,
+                    points: s.points
+                }));
+
+                statsData.constructors = cData.MRData.StandingsTable.StandingsLists[0].ConstructorStandings.map(s => ({
+                    rank: s.position,
+                    name: s.Constructor.name,
+                    team: s.Constructor.name,
+                    wins: s.wins,
+                    sprints: teamSprintWinsMap[s.Constructor.name] || 0,
+                    points: s.points
+                }));
+                renderStats();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderStats() {
+            const body = document.getElementById('stats-body');
+            body.innerHTML = statsData[currentTab].map((item, i) => {
+                const color = teamColors[item.team] || teamColors[item.name] || '#333';
+                const colorAlpha = color + '33';
+                
+                const normalized = (item.lastName || item.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const fileId = normalized.substring(0, 3).toLowerCase();
+
+                return `
+                    <tr class="relative" style="--team-color: ${color}; --team-color-alpha: ${colorAlpha}">
+                        <td class="py-5 md:py-8 px-2 md:px-8 text-center relative">
+                            <div class="color-splash"></div>
+                            <div class="team-border"></div>
+                            <div class="pos-bg">${item.rank}</div>
+                            <span class="relative z-10 text-sm md:text-2xl font-black italic tracking-tighter ${i < 3 ? 'text-white' : 'text-zinc-600'}">
+                                ${item.rank}
+                            </span>
+                        </td>
+                        <td class="py-5 md:py-8 px-2">
+                            <div class="flex items-center gap-2 md:gap-5 relative z-10 min-w-0">
+                                ${currentTab === 'drivers' ? `
+                                <div class="driver-img-container" style="--team-color-alpha: ${colorAlpha}">
+                                    <img src="F1driversIMG/${fileId}.png" class="w-full h-full object-cover object-top" onerror="this.src='F1driversIMG/default.png'">
+                                </div>` : ''}
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-[6px] md:text-[9px] font-black uppercase tracking-wider truncate" style="color: ${color}">${item.team}</span>
+                                    <span class="text-[11px] md:text-xl font-black uppercase italic tracking-tighter text-white truncate">
+                                        ${item.name}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-5 md:py-8 px-1 text-center relative z-10">
+                            <span class="text-xs md:text-base font-black italic">${item.wins}</span>
+                        </td>
+                        <td class="py-5 md:py-8 px-1 text-center relative z-10">
+                            <span class="text-xs md:text-base font-black italic text-zinc-500">${item.sprints}</span>
+                        </td>
+                        <td class="py-5 md:py-8 px-4 md:px-8 text-right relative z-10">
+                            <span class="text-sm md:text-3xl font-black italic tracking-tighter text-white leading-none">${item.points}</span>
+                        </td>
+                    </tr>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        window.switchStats = (tab) => {
+            currentTab = tab;
+            document.getElementById('tab-drivers').className = tab === 'drivers' ? "px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all tab-active" : "px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500 transition-all";
+            document.getElementById('tab-constructors').className = tab === 'constructors' ? "px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all tab-active" : "px-5 md:px-8 py-2 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500 transition-all";
+            renderStats();
+        };
+
+        fetchAllStats();
+    </script>
+</body>
+</html>
