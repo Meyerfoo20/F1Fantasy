@@ -15,6 +15,10 @@ body {
     overflow-x: hidden;
 }
 
+nav h1 {
+    font-family: 'Inter', sans-serif; 
+}
+
 .f1-red-text { color: var(--f1-red); }
 .bg-f1-red { background-color: var(--f1-red); }
 .border-f1 { border-color: var(--border-gray); }
