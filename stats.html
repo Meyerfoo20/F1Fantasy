@@ -332,15 +332,22 @@
                         
                         <div class="absolute inset-0 opacity-[0.05] z-0" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIj48L3JlY3Q+Cjwvc3ZnPg==');"></div>
 
-                        <div class="absolute inset-0 opacity-50 z-0" style="background: radial-gradient(circle at 50% 40%, ${color}44 0%, transparent 90%)"></div>
+                        <div class="absolute left-[-15%] top-[-5%] flex justify-start z-1 select-none pointer-events-none">
+                            <h1 class="text-[18rem] md:text-[25rem] font-black italic tracking-tighter opacity-15" 
+                                style="color: ${color}; line-height: 0.8;">
+                                ${driver.number}
+                            </h1>
+                        </div>
 
                         <img src="F1driversIMG/${fileId}.png" 
                             class="absolute inset-0 w-full h-full object-cover object-top filter contrast-[1.1] brightness-[1.1] z-10 scale-105 transition-transform duration-700 hover:scale-110" 
                             onerror="this.src='F1driversIMG/default.png'">
                         
+                        <div class="absolute inset-0 opacity-40 z-0" style="background: radial-gradient(circle at 50% 40%, ${color}44 0%, transparent 90%)"></div>
+                        
                         <div class="absolute inset-x-0 bottom-0 z-30 p-8 bg-gradient-to-t from-black via-black/80 to-transparent">
                             <div class="flex items-center gap-3 mb-2">
-                                <span class="text-4xl md:text-6xl font-black italic text-white drop-shadow-2xl tracking-tighter" style="color: ${color}">${driver.number}</span>
+                                <span class="text-4xl md:text-5xl font-black italic text-white tracking-tighter" style="color: ${color}">${driver.number}</span>
                                 <div class="h-8 w-[2px] bg-white/20 rotate-12"></div>
                                 <div class="flex flex-col">
                                     <span class="text-xl font-bold italic">${driver.lastName.toUpperCase()}</span>
