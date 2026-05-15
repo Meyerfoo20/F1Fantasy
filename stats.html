@@ -51,7 +51,7 @@
             width: 3px;
             background: var(--team-color);
             border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 15px var(--team-color);
+            box-shadow: 0 0 55px var(--team-color);
         }
 
         .driver-img-container {
@@ -124,7 +124,8 @@
                 </li>
                 <li>
                     <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
-                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Konto</span>
+                        <i data-lucide="user-circle" class="w-4 h-4"></i> 
+                        <span class="nav-text hidden sm:inline">Konto</span>
                     </a>
                 </li>
             </ul>
@@ -148,7 +149,7 @@
         </div>
 
         <div class="glass-panel rounded-2xl md:rounded-[2.5rem] overflow-hidden">
-            <table class="w-full text-left border-collapse table-fixed">
+            <table class="w-full text-left border-collapse table-auto">
                 <thead>
                     <tr class="border-b border-white/5 bg-white/[0.02]">
                         <th class="col-pos py-4 md:py-6 px-2 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-center">Pos</th>
@@ -160,6 +161,16 @@
                 </thead>
                 <tbody id="stats-body" class="divide-y divide-white/[0.03]"></tbody>
             </table>
+        </div>
+    </div>
+    <div id="driver-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+        <div class="glass-panel w-full max-w-4xl max-h-[90vh] rounded-[2rem] overflow-y-auto relative border-white/10 border shadow-2xl custom-scrollbar">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-white/50 hover:text-white z-50 bg-black/40 p-2 rounded-full backdrop-blur-md">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div id="modal-content" class="relative">
+                </div>
         </div>
     </div>
 
@@ -195,7 +206,11 @@
             if (user) {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
-                    authLink.innerHTML = `<span class="flex items-center gap-2"><i data-lucide=\"user\" class=\"w-3 h-3 text-f1-red\"></i>${userDoc.data().username}</span>`;
+                    authLink.innerHTML = `
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4 text-white"></i>
+                            <span class="hidden sm:inline">${userDoc.data().username}</span>
+                        </span>`;
                     lucide.createIcons();
                 }
             }
@@ -226,6 +241,7 @@
                 statsData.drivers = dData.MRData.StandingsTable.StandingsLists[0].DriverStandings.map(s => ({
                     rank: s.position,
                     id: s.Driver.driverId,
+                    number: s.Driver.permanentNumber || "??", 
                     lastName: s.Driver.familyName, 
                     name: s.Driver.givenName + " " + s.Driver.familyName,
                     team: s.Constructors[0].name,
@@ -256,7 +272,9 @@
                 const fileId = normalized.substring(0, 3).toLowerCase();
 
                 return `
-                    <tr class="relative" style="--team-color: ${color}; --team-color-alpha: ${colorAlpha}">
+                    <tr class="relative cursor-pointer hover:bg-white/[0.02] transition-colors" 
+                        onclick="${currentTab === 'drivers' ? `openDriverModal('${item.id}')` : ''}"
+                        style="--team-color: ${color}; --team-color-alpha: ${colorAlpha}">
                         <td class="py-5 md:py-8 px-2 md:px-8 text-center relative">
                             <div class="color-splash"></div>
                             <div class="team-border"></div>
@@ -271,9 +289,9 @@
                                 <div class="driver-img-container" style="--team-color-alpha: ${colorAlpha}">
                                     <img src="F1driversIMG/${fileId}.png" class="w-full h-full object-cover object-top" onerror="this.src='F1driversIMG/default.png'">
                                 </div>` : ''}
-                                <div class="flex flex-col min-w-0">
-                                    <span class="text-[6px] md:text-[9px] font-black uppercase tracking-wider truncate" style="color: ${color}">${item.team}</span>
-                                    <span class="text-[11px] md:text-xl font-black uppercase italic tracking-tighter text-white truncate">
+                                <div class="flex flex-col">
+                                    <span class="text-[6px] md:text-[9px] font-black uppercase tracking-wider whitespace-nowrap" style="color: ${color}">${item.team}</span>
+                                    <span class="text-[11px] md:text-xl font-black uppercase italic tracking-tighter text-white whitespace-nowrap">
                                         ${item.name}
                                     </span>
                                 </div>
@@ -292,6 +310,124 @@
             }).join('');
             lucide.createIcons();
         }
+
+        window.openDriverModal = async (driverId) => {
+            const modal = document.getElementById('driver-modal');
+            const content = document.getElementById('modal-content');
+            const driver = statsData.drivers.find(d => d.id === driverId);
+            
+            if (!driver) return;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            
+            const color = teamColors[driver.team] || '#ffffff';
+            const normalized = driver.lastName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const fileId = normalized.substring(0, 3).toLowerCase();
+
+            content.innerHTML = `
+                <div class="flex flex-col md:flex-row h-full md:h-[600px]">
+                    <div class="relative w-full md:w-5/12 h-[350px] md:h-full bg-[#050505] overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
+                        
+                        <div class="absolute inset-0 opacity-[0.05] z-0" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIj48L3JlY3Q+Cjwvc3ZnPg==');"></div>
+
+                        <div class="absolute inset-0 opacity-50 z-0" style="background: radial-gradient(circle at 50% 40%, ${color}44 0%, transparent 80%)"></div>
+
+                        <img src="F1driversIMG/${fileId}.png" 
+                            class="absolute inset-0 w-full h-full object-cover object-top filter contrast-[1.1] brightness-[1.1] z-10 scale-105 transition-transform duration-700 hover:scale-110" 
+                            onerror="this.src='F1driversIMG/default.png'">
+                        
+                        <div class="absolute inset-x-0 bottom-0 z-30 p-8 bg-gradient-to-t from-black via-black/80 to-transparent">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-4xl md:text-6xl font-black italic text-white drop-shadow-2xl tracking-tighter" style="color: ${color}">${driver.number}</span>
+                                <div class="h-8 w-[2px] bg-white/20 rotate-12"></div>
+                                <div class="flex flex-col">
+                                    <span class="text-xl font-bold italic">${driver.lastName.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col bg-[#0a0a0a] relative overflow-hidden">
+                        
+                        <div class="absolute -right-10 -bottom-10 opacity-[0.02] select-none pointer-events-none rotate-[-15deg]">
+                            <h1 class="text-[10rem] font-black uppercase">${driver.team.split(' ')[0]}</h1>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <p class="text-f1-red font-black italic text-xs uppercase tracking-[0.3em] mb-1">Driver Profile</p>
+                                    <h3 class="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white">
+                                        ${driver.name.split(' ')[0]} <span style="color: ${color}">${driver.lastName}</span>
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4 mb-10 p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 shadow-inner">
+                                    <i data-lucide="shield-check" class="w-5 h-5" style="color: ${color}"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest leading-none mb-1">Team</p>
+                                    <p class="text-sm font-bold text-white uppercase">${driver.team}</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 relative z-10">
+                                <div class="group bg-gradient-to-br from-white/[0.05] to-transparent p-6 rounded-[2rem] border border-white/10 hover:border-${color}/40 transition-all duration-500">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <p class="text-zinc-500 text-[9px] font-black uppercase tracking-widest text-zinc-500">World Pts</p>
+                                        <i data-lucide="trending-up" class="w-4 h-4 text-zinc-700"></i>
+                                    </div>
+                                    <p class="text-5xl font-black italic text-white leading-none mb-2">${driver.points}</p>
+                                    <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-white/40 w-[75%] rounded-full"></div>
+                                    </div>
+                                </div>
+
+                                <div class="group bg-gradient-to-br from-white/[0.05] to-transparent p-6 rounded-[2rem] border border-white/10 transition-all duration-500">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <p class="text-zinc-500 text-[9px] font-black uppercase tracking-widest text-zinc-500">GP Wins</p>
+                                        <i data-lucide="trophy" class="w-4 h-4 text-zinc-700"></i>
+                                    </div>
+                                    <p class="text-5xl font-black italic text-white leading-none">${driver.wins}</p>
+                                </div>
+
+                                <div class="bg-white/[0.02] p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+                                    <div>
+                                        <p class="text-zinc-500 text-[9px] font-black uppercase tracking-widest">Sprints</p>
+                                        <p class="text-xl font-black italic text-zinc-300">${driver.sprints}</p>
+                                    </div>
+                                    <i data-lucide="zap" class="w-5 h-5 text-zinc-700"></i>
+                                </div>
+
+                                <div class="p-5 rounded-2xl flex items-center justify-between border transition-transform hover:scale-[1.02]" style="background: ${color}10; border-color: ${color}30">
+                                    <div>
+                                        <p class="text-white/40 text-[9px] font-black uppercase tracking-widest">Standings</p>
+                                        <p class="text-xl font-black text-white italic tracking-tighter text-2xl">#${driver.rank}</p>
+                                    </div>
+                                    <i data-lucide="hash" class="w-5 h-5 text-white/20"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        };
+        window.closeModal = () => {
+            const modal = document.getElementById('driver-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto'; // Återställ scroll
+        };
+
+        window.onclick = (event) => {
+            const modal = document.getElementById('driver-modal');
+            if (event.target == modal) closeModal();
+        };
 
         window.switchStats = (tab) => {
             currentTab = tab;
