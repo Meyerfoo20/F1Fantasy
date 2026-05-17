@@ -12,6 +12,17 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black">
         <link rel="stylesheet" href="main.css">
+        <style>
+            .hero-bg-custom {
+                background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6)), url('hero.png');
+                background-size: cover;
+                background-position: top;
+                background-repeat: no-repeat;
+                min-height: 75vh; 
+                display: flex;
+                align-items: flex-end;
+            }
+        </style>
     </head>
 <body>
 
@@ -64,26 +75,7 @@
         </div>
     </div>
 
-    <header class="relative min-h-[60vh] md:h-[80vh] flex items-center justify-center text-center overflow-hidden border-b border-f1 px-4">
-        <div class="absolute inset-0 hero-pattern z-10"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-10"></div>
-        
-        <div class="relative z-20 max-w-5xl py-12">
-            <div class="inline-flex items-center gap-2 bg-f1-red/10 border border-f1-red/30 f1-red-text px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6">
-                <i data-lucide="zap" class="w-4 h-4"></i> Säsongen 2026 är öppen
-            </div>
-            <h2 class="text-4xl md:text-8xl font-extrabold uppercase mb-6 italic tracking-tighter leading-[1.1]">
-                Bygg ditt <br> <span class="f1-red-text">FANTASY LAG</span>
-            </h2>
-            <p class="text-base md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Ta kontrollen över ditt egna F1-stall. Välj förare, konstruktör och strategier baserat på <strong class="text-white">realtidsdata</strong> från banan.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button onclick="window.location.href='fantasy.html'" class="w-full sm:w-auto bg-f1-red hover:bg-red-700 text-white px-10 py-4 md:px-12 md:py-5 rounded-xl font-bold transition transform hover:-translate-y-1 uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg shadow-red-900/20">
-                    Skapa ditt lag <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </div>
+    <header class="hero-bg-custom py-16 md:py-28 relative overflow-hidden border-b border-zinc-800">
     </header>
 
     <section class="container mx-auto px-4 -mt-10 relative z-30">
