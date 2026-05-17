@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>F1 Fantasy</title>
+    <title>F1 Fantasy | Live Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="manifest" href="manifest.json">
@@ -25,7 +25,6 @@
 
         .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Glasmorfism */
         .glass-card {
             background: rgba(15, 15, 15, 0.6);
             backdrop-filter: blur(12px);
@@ -42,20 +41,54 @@
             opacity: 0.3;
         }
 
-        /* Responsiva bredder för kolumner */
-        .col-pos { width: 50px; }
-        .col-driver { min-width: 140px; }
-        .col-gap { width: 80px; }
-        .col-pts { width: 60px; }
-
-        @media (min-width: 768px) {
-            .col-pos { width: 100px; }
-            .col-driver { min-width: 300px; }
-            .col-gap { width: 150px; }
-            .col-pts { width: 120px; }
+        .race-hero {
+            position: relative;
+            width: 100%;
+            min-height: 50vh;
+            display: flex;
+            align-items: flex-end;
+            padding-bottom: 5rem;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 1.2s ease-in-out;
         }
 
-        /* Behållare för förarbilden - mindre på mobil */
+        .race-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #050505 0%, rgba(5, 5, 5, 0.6) 40%, rgba(5, 5, 5, 0.2) 100%);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+        }
+
+        /* Sessions-knappar */
+        .session-btn {
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .session-btn.active {
+            background: var(--f1-red);
+            color: white;
+            border-color: var(--f1-red);
+            box-shadow: 0 0 15px rgba(225, 6, 0, 0.4);
+        }
+
         .driver-img-container {
             width: 35px;
             height: 35px;
@@ -77,83 +110,65 @@
                 F1<span class="f1-red-text">FANTASY</span>
             </h1>
             <ul class="flex space-x-1 md:space-x-2 font-semibold uppercase text-[10px] md:text-xs tracking-widest text-gray-300">
-                <li>
-                    <a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
-                        <i data-lucide="home" class="w-4 h-4"></i> <span class="nav-text">Hem</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
-                        <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-text">Fantasy</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="stats.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 hover:text-white transition">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span class="nav-text hidden sm:inline">Stats</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="konto.html" id="auth-nav-link" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition">
-                        <i data-lucide="user-circle" class="w-4 h-4"></i> <span class="nav-text">Konto</span>
-                    </a>
-                </li>
+                <li><a href="index.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 transition"><i data-lucide="home" class="w-4 h-4"></i><span class="nav-text">Hem</span></a></li>
+                <li><a href="fantasy.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 transition"><i data-lucide="users" class="w-4 h-4"></i><span class="nav-text">Fantasy</span></a></li>
+                <li><a href="stats.html" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-900 transition"><i data-lucide="bar-chart-3" class="w-4 h-4"></i><span class="nav-text hidden sm:inline">Stats</span></a></li>
+                <li><a href="konto.html" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-f1-red text-white hover:bg-red-700 transition"><i data-lucide="user-circle" class="w-4 h-4"></i><span class="nav-text">Konto</span></a></li>
             </ul>
         </div>
     </nav>
 
-    <header class="relative pt-8 md:pt-12 pb-6 md:pb-8 overflow-hidden">
-        <div class="container mx-auto px-4 md:px-6 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <section id="hero-bg" class="race-hero" style="background-image: url('herorace/default.jpg');">
+        <div class="container mx-auto px-4 md:px-6 hero-content">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pt-32 pb-8">
                 <div class="w-full md:w-auto">
-                    <div class="flex items-center gap-3 mb-3 md:mb-4">
-                        <div id="status-badge" class="flex items-center gap-2 bg-zinc-900 px-2 md:px-3 py-1 rounded-full border border-white/10">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                             <span class="relative flex h-2 w-2">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
                             </span>
-                            <span id="live-indicator" class="text-[8px] md:text-[10px] font-black tracking-widest uppercase">Syncing...</span>
+                            <span id="live-indicator" class="text-[10px] font-black tracking-widest uppercase text-white font-mono">Race Control</span>
                         </div>
-                        <span id="session-type" class="text-f1-red text-[8px] md:text-[10px] font-black tracking-[0.2em] md:tracking-[0.3em] uppercase">Season 2026</span>
                     </div>
-                    <h1 id="gp-title" class="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-2">
-                        LIVE <span class="text-zinc-800 italic">STATS</span>
-                    </h1>
-                    <div class="flex items-center gap-2 text-zinc-500">
-                        <i data-lucide="map-pin" class="w-3 h-3 md:w-4 md:h-4 text-f1-red"></i>
-                        <p id="location-text" class="text-[10px] md:text-xs font-bold uppercase tracking-widest italic">Laddar bana...</p>
-                    </div>
+                    <h1 id="gp-title" class="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none mb-4 text-white drop-shadow-2xl">Laddar...</h1>
+                    <p id="location-text" class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] italic text-white/70">---</p>
                 </div>
-
-                <div class="flex gap-2 md:gap-4 w-full md:w-auto justify-start">
-                    <div class="glass-card flex-1 md:flex-none px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-3xl text-center">
-                        <p class="text-zinc-500 text-[7px] md:text-[9px] font-black uppercase mb-1">Round</p>
-                        <p id="round-num" class="text-lg md:text-2xl font-black italic tracking-tighter">--</p>
+                
+                <div class="flex gap-4 w-full md:w-auto">
+                    <div class="glass-card flex-1 md:flex-none px-6 py-4 rounded-3xl text-center border border-white/10">
+                        <p class="text-zinc-400 text-[9px] font-black uppercase mb-1">Session</p>
+                        <p id="session-label" class="text-xl md:text-2xl font-black italic text-white uppercase tracking-tighter leading-none">--</p>
                     </div>
-                    <div class="glass-card flex-1 md:flex-none px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-3xl text-center border-l-2 md:border-l-4 border-f1-red">
-                        <p class="text-zinc-500 text-[7px] md:text-[9px] font-black uppercase mb-1">Status</p>
-                        <p id="race-status" class="text-lg md:text-2xl font-black italic tracking-tighter uppercase text-f1-red">--</p>
+                    <div class="glass-card flex-1 md:flex-none px-6 py-4 rounded-3xl text-center border-l-4 border-f1-red bg-f1-red/10">
+                        <p class="text-f1-red text-[9px] font-black uppercase mb-1">Status</p>
+                        <p id="race-status" class="text-xl md:text-2xl font-black italic text-white text-f1-red uppercase tracking-tighter leading-none">--</p>
                     </div>
                 </div>
             </div>
+
+            <div id="session-selector" class="flex gap-2 mt-4 overflow-x-auto pb-2">
+                <button onclick="updateLivePage('results')" id="btn-results" class="session-btn active">Race</button>
+                <button onclick="updateLivePage('qualifying')" id="btn-qualifying" class="session-btn">Qualifying</button>
+                <button onclick="updateLivePage('sprint')" id="btn-sprint" class="session-btn hidden">Sprint</button>
+            </div>
         </div>
-    </header>
+    </section>
 
     <main class="container mx-auto px-2 md:px-6">
         <div class="glass-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative">
             <div class="scanline"></div>
-            
             <div class="overflow-x-auto overflow-y-hidden">
                 <table class="w-full text-left border-collapse table-fixed md:table-auto">
                     <thead>
                         <tr class="bg-white/[0.02] border-b border-white/5">
                             <th class="col-pos py-4 md:py-6 px-2 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-center">Pos</th>
                             <th class="col-driver py-4 md:py-6 px-2 text-[8px] md:text-[10px] font-black uppercase text-zinc-500">Driver</th>
-                            <th class="col-gap py-4 md:py-6 px-2 text-[8px] md:text-[10px] font-black uppercase text-zinc-500">Gap</th>
-                            <th class="col-pts py-4 md:py-6 px-4 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-right">Pts</th>
+                            <th id="gap-header" class="col-gap py-4 md:py-6 px-2 text-[8px] md:text-[10px] font-black uppercase text-zinc-500">Gap</th>
+                            <th id="pts-header" class="col-pts py-4 md:py-6 px-4 md:px-8 text-[8px] md:text-[10px] font-black uppercase text-zinc-500 text-right">Pts</th>
                         </tr>
                     </thead>
-                    <tbody id="live-table-body" class="divide-y divide-white/[0.03]">
-                        </tbody>
+                    <tbody id="live-table-body" class="divide-y divide-white/[0.03]"></tbody>
                 </table>
             </div>
         </div>
@@ -166,95 +181,111 @@
             'RB F1 Team': '#6692FF', 'Haas F1 Team': '#B6BABD', 'Williams': '#64C4FF', 'Audi': '#e10600'
         };
 
-        async function updateLivePage() {
+        async function updateLivePage(sessionType = 'results') {
             try {
-                const res = await fetch('https://api.jolpi.ca/ergast/f1/current/last/results.json');
+                // UI Hantering av knappar
+                document.querySelectorAll('.session-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.getElementById(`btn-${sessionType}`);
+                if(activeBtn) activeBtn.classList.add('active');
+
+                // Hämta data
+                const res = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/${sessionType}.json`);
                 const data = await res.json();
                 const race = data.MRData.RaceTable.Races[0];
 
-                document.getElementById('gp-title').innerHTML = `${race.raceName.split(' ')[0]} <span class="text-zinc-800 italic">${race.raceName.split(' ').slice(1).join(' ')}</span>`;
+                if (!race) {
+                    if (sessionType === 'sprint') document.getElementById('btn-sprint').classList.add('hidden');
+                    return;
+                }
+
+                // Visa Sprint-knappen om data finns
+                if (sessionType === 'sprint') document.getElementById('btn-sprint').classList.remove('hidden');
+                
+                // Uppdatera Hero
+                const cityName = race.Circuit.Location.locality.toLowerCase().replace(/\s+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                document.getElementById('hero-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('herorace/${cityName}.jpg')`;
+                document.getElementById('gp-title').innerHTML = `${race.raceName.split(' ')[0]} <span class="text-white/20 italic">${race.raceName.split(' ').slice(1).join(' ')}</span>`;
                 document.getElementById('location-text').innerText = `${race.Circuit.Location.locality}, ${race.Circuit.Location.country.toUpperCase()}`;
-                document.getElementById('round-num').innerText = race.round;
+                document.getElementById('session-label').innerText = sessionType === 'results' ? 'Race' : sessionType;
                 document.getElementById('race-status').innerText = "Finished";
-                document.getElementById('live-indicator').innerText = "Live Stream Data";
+
+                // Anpassa tabell-headers
+                document.getElementById('gap-header').innerText = sessionType === 'qualifying' ? 'Time' : 'Gap';
+                document.getElementById('pts-header').innerText = sessionType === 'qualifying' ? 'Q3' : 'Pts';
 
                 const tbody = document.getElementById('live-table-body');
-                tbody.innerHTML = race.Results.map(res => {
-                    const color = teamColors[res.Constructor.name] || '#ffffff';
-                    const status = res.status || "";
-                    let displayTime = "";
+                const resultsArray = race.Results || race.QualifyingResults || race.SprintResults;
 
-                    const normalized = res.Driver.familyName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                tbody.innerHTML = resultsArray.map(item => {
+                    const color = teamColors[item.Constructor.name] || '#ffffff';
+                    const normalized = item.Driver.familyName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const fileId = normalized.substring(0, 3).toLowerCase();
+                    
+                    let displayGap = "";
+                    let displayPts = "";
 
-                    if (status.includes('Lap')) {
-                        const lapCount = status.replace(/\D/g, ''); 
-                        displayTime = `<span class="text-f1-red font-black text-[9px] md:text-[11px] tracking-tighter">+${lapCount}L</span>`;
-                    } else if (res.position === "1") {
-                        displayTime = `<span class="text-white font-mono opacity-60 text-[9px] md:text-sm uppercase">Winner</span>`;
-                    } else if (res.Time && res.Time.time) {
-                        displayTime = `<span class="text-white font-mono text-[10px] md:text-sm">${res.Time.time}</span>`;
+                    if (sessionType === 'qualifying') {
+                        displayGap = item.Q1 || "--";
+                        displayPts = item.Q3 || item.Q2 || "--";
                     } else {
-                        displayTime = `<span class="text-zinc-500 font-bold text-[8px] md:text-[10px] italic">${status.toUpperCase()}</span>`;
+                        displayPts = item.points;
+                        if (item.status && item.status.includes('Lap')) {
+                            displayGap = `<span class="text-f1-red font-black text-[9px] md:text-[11px]">+${item.status.replace(/\D/g, '')}L</span>`;
+                        } else if (item.position === "1") {
+                            displayGap = `<span class="text-white font-mono opacity-60 text-[9px] md:text-sm uppercase">Winner</span>`;
+                        } else {
+                            displayGap = item.Time ? item.Time.time : (item.status || "");
+                        }
                     }
 
                     return `
                         <tr class="relative border-b border-white/[0.05] bg-gradient-to-r from-[${color}08] to-transparent">
                             <td class="py-4 md:py-6 px-2 md:px-8 text-center">
-                                <span class="text-xl md:text-4xl font-black italic" 
-                                    style="color: ${res.position <= 3 ? color : '#3f3f46'}">
-                                    ${res.position}
+                                <span class="text-xl md:text-4xl font-black italic" style="color: ${item.position <= 3 ? color : '#3f3f46'}">
+                                    ${item.position}
                                 </span>
                             </td>
-
                             <td class="py-4 md:py-6 px-2 min-w-[180px] md:min-w-[350px]">
                                 <div class="flex items-center gap-3 md:gap-5">
-                                    <div class="w-1 h-10 md:h-14 rounded-full shadow-lg" 
-                                        style="background-color: ${color}; box-shadow: 0 0 15px ${color}66"></div>
-                                    
+                                    <div class="w-1 h-10 md:h-14 rounded-full" style="background-color: ${color}"></div>
                                     <div class="driver-img-container">
                                         <img src="F1driversIMG/${fileId}.png" class="w-full h-full object-cover object-top" onerror="this.src='F1driversIMG/default.png'">
                                     </div>
-
                                     <div class="flex flex-col">
-                                        <span class="hidden md:block text-[10px] font-black uppercase tracking-[0.25em] mb-1" style="color: ${color}">
-                                            ${res.Constructor.name}
-                                        </span>
+                                        <span class="hidden md:block text-[10px] font-black uppercase text-zinc-500 mb-1">${item.Constructor.name}</span>
                                         <div class="flex flex-col md:flex-row md:items-baseline md:gap-2">
-                                            <span class="text-zinc-500 text-[10px] md:text-xs font-bold uppercase tracking-tighter leading-none">${res.Driver.givenName}</span>
-                                            <span class="text-lg md:text-2xl font-black italic uppercase text-white tracking-tighter leading-none whitespace-nowrap">
-                                                ${res.Driver.familyName}
-                                            </span>
+                                            <span class="text-zinc-500 text-[10px] font-bold uppercase">${item.Driver.givenName}</span>
+                                            <span class="text-lg md:text-2xl font-black italic uppercase text-white">${item.Driver.familyName}</span>
                                         </div>
                                     </div>
                                 </div>
                             </td>
-
                             <td class="py-4 md:py-6 px-2 w-24 md:w-44">
-                                <div class="flex flex-col">
-                                    <p class="hidden md:block text-[8px] font-black text-zinc-600 uppercase tracking-widest mb-1 font-mono">Gap</p>
-                                    <div class="leading-none">${displayTime}</div>
-                                </div>
+                                <div class="font-mono text-[10px] md:text-sm">${displayGap}</div>
                             </td>
-
                             <td class="py-4 md:py-6 px-4 md:px-8 text-right w-20 md:w-32">
-                                <div class="text-2xl md:text-4xl font-black italic tracking-tighter" 
-                                    style="color: ${res.points > 0 ? color : '#1e1e1e'}; 
-                                            text-shadow: ${res.points > 0 ? `0 0 20px ${color}44` : 'none'}">
-                                    ${res.points}
+                                <div class="text-2xl md:text-4xl font-black italic" style="color: ${displayPts > 0 || sessionType === 'qualifying' ? color : '#1e1e1e'}">
+                                    ${displayPts}
                                 </div>
                             </td>
                         </tr>
                     `;
                 }).join('');
 
-            } catch (error) {
-                console.error("Critical Error:", error);
-            }
+                // Check for Sprint existance on load
+                if (sessionType === 'results') {
+                    const sprintCheck = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/sprint.json`);
+                    const sprintData = await sprintCheck.json();
+                    if (sprintData.MRData.RaceTable.Races.length > 0) {
+                        document.getElementById('btn-sprint').classList.remove('hidden');
+                    }
+                }
+
+            } catch (error) { console.error("Error:", error); }
         }
 
+        window.updateLivePage = updateLivePage;
         updateLivePage();
-        setInterval(updateLivePage, 60000);
         lucide.createIcons();
     </script>
 </body>
