@@ -409,16 +409,25 @@
             } catch (e) { console.error("PF Update Error:", e); }
         }
 
-        // Starta timer direkt
         setInterval(updateParcFermeStatus, 1000);
         updateParcFermeStatus();
-
-        async function calculatePointsForUser(uid, teamIds, constructorId) {
+        
+        async function calculatePointsForUser(uid) {
             try {
                 const userRef = doc(db, "users", uid);
                 const userSnap = await getDoc(userRef);
                 const uData = userSnap.data();
 
+                // 1. Hämta det låsta laget (ögonblicksbilden från när användaren sparade)
+                const lockedTeam = uData.lockedTeam;
+                
+                // Säkerhetskoll: Har användaren ett låst lag?
+                if (!lockedTeam || !lockedTeam.drivers || !lockedTeam.constructor) {
+                    console.log("Inget låst lag hittades för poängberäkning.");
+                    return 0;
+                }
+
+                // 2. Hämta senaste resultat från API:et
                 const infoRes = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/results.json`);
                 const infoData = await infoRes.json();
                 const raceInfo = infoData.MRData.RaceTable.Races[0];
@@ -426,22 +435,21 @@
                 const season = raceInfo.season;
                 const round = parseInt(raceInfo.round);
                 const currentRaceName = `${raceInfo.raceName} ${season}`;
+                const raceKeyFromApi = `${season}_${round}`;
 
-                if (round < 5) {
-                    await updateDoc(userRef, { 
-                        lastRacePoints: 0,
-                        lastRaceName: currentRaceName,
-                        pointsBreakdown: { drivers: {}, constructor: { points: 0, detail: "Väntar på Kanada GP" } }
-                    });
+                // 3. Kontrollera om vi redan har gett poäng för detta race
+                if (uData.lastRaceName === currentRaceName) {
+                    console.log("Poäng för detta race är redan utdelade.");
                     return 0;
                 }
 
+                // 4. Hämta data för Sprint och Kval
                 let sprintResults = [];
                 try {
                     const sprintRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/sprint.json`);
                     const sprintData = await sprintRes.json();
                     sprintResults = sprintData.MRData.RaceTable.Races[0]?.SprintResults || [];
-                } catch (e) { console.log("Ingen sprint"); }
+                } catch (e) { console.log("Ingen sprint denna helg"); }
 
                 const qualyRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/qualifying.json`);
                 const qualyData = await qualyRes.json();
@@ -452,12 +460,16 @@
                 let lastRacePoints = 0;
                 let breakdown = { drivers: {}, constructor: { points: 0, detail: "" } };
 
-                teamIds.forEach(driverId => {
+                // 5. Räkna poäng för FÖRARE (baserat på lockedTeam.drivers)
+                lockedTeam.drivers.forEach(driverId => {
                     const driverData = data.drivers.find(d => d.id === driverId);
+                    if (!driverData) return;
+
                     const lastName = driverData.name.split(' ').pop().toLowerCase();
                     let dPoints = 0;
                     let details = [];
 
+                    // Race-resultat
                     const raceResult = raceResults.find(r => r.Driver.familyName.toLowerCase() === lastName);
                     if (raceResult) {
                         const p = parseInt(raceResult.points) || 0;
@@ -469,6 +481,7 @@
                         }
                     }
 
+                    // Sprint-resultat
                     const sprintResult = sprintResults.find(s => s.Driver.familyName.toLowerCase() === lastName);
                     if (sprintResult) {
                         const sp = parseInt(sprintResult.points) || 0;
@@ -476,6 +489,7 @@
                         if (sp > 0) details.push(`${sp} P (Sprint)`);
                     }
 
+                    // Kval-resultat (Pole Position)
                     const qualyResult = qualyResults.find(q => q.Driver.familyName.toLowerCase() === lastName);
                     if (qualyResult && qualyResult.position === "1") {
                         dPoints += 4;
@@ -489,23 +503,38 @@
                     lastRacePoints += dPoints;
                 });
 
-                if (constructorId) {
-                    const constructorData = data.constructors.find(c => c.id === constructorId);
-                    const teamRacePoints = raceResults.filter(r => r.Constructor.name.includes(constructorData.team)).reduce((sum, r) => sum + (parseInt(r.points) || 0), 0);
-                    const teamSprintPoints = sprintResults.filter(s => s.Constructor.name.includes(constructorData.team)).reduce((sum, s) => sum + (parseInt(s.points) || 0), 0);
+                // 6. Räkna poäng för KONSTRUKTÖR (baserat på lockedTeam.constructor)
+                const constructorData = data.constructors.find(c => c.id === lockedTeam.constructor);
+                if (constructorData) {
+                    // Samla ihop poäng från båda bilarna i stallet
+                    const teamRacePoints = raceResults
+                        .filter(r => r.Constructor.name.includes(constructorData.team))
+                        .reduce((sum, r) => sum + (parseInt(r.points) || 0), 0);
+                    
+                    const teamSprintPoints = sprintResults
+                        .filter(s => s.Constructor.name.includes(constructorData.team))
+                        .reduce((sum, s) => sum + (parseInt(s.points) || 0), 0);
+
                     const totalCPoints = teamRacePoints + teamSprintPoints;
                     breakdown.constructor = { points: totalCPoints, detail: `${totalCPoints} P (Team Total)` };
                     lastRacePoints += totalCPoints;
                 }
 
+                // 7. Uppdatera Firebase med de nya poängen
                 await updateDoc(userRef, { 
                     seasonTotalPoints: (uData.seasonTotalPoints || 0) + lastRacePoints,
                     lastRacePoints: lastRacePoints,
                     lastRaceName: currentRaceName,
                     pointsBreakdown: breakdown
                 });
+
+                console.log(`Poäng beräknade för ${currentRaceName}: ${lastRacePoints} poäng.`);
                 return lastRacePoints;
-            } catch (error) { console.error(error); return 0; }
+
+            } catch (error) { 
+                console.error("Fel i poängberäkningen:", error); 
+                return 0; 
+            }
         }
 
         window.showToast = (msg) => {
@@ -521,11 +550,17 @@
             if (user) {
                 currentUser = user;
                 await refreshData();
-                if (userData && userData.constructor && (userData.team || []).length === 4) {
-                    showLeague();
-                } else {
-                    renderSlots();
-                    renderMarket();
+                
+                if (userData) {
+                    await calculatePointsForUser(currentUser.uid);
+                    await refreshData();
+
+                    if (userData.constructor && (userData.team || []).length === 4) {
+                        showLeague();
+                    } else {
+                        renderSlots();
+                        renderMarket();
+                    }
                 }
             } else { 
                 window.location.href = 'konto.html'; 
@@ -670,10 +705,32 @@
         };
 
         window.confirmTeam = async () => {
-            if (!userData.constructor || (userData.team || []).length < 4) return showToast("Ditt stall är inte komplett!");
-            await calculatePointsForUser(currentUser.uid, userData.team, userData.constructor);
-            await refreshData();
-            showLeague();
+            if (!userData.constructor || (userData.team || []).length < 4) {
+                return showToast("Ditt stall är inte komplett!");
+            }
+
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                
+                const response = await fetch(`https://api.jolpi.ca/ergast/f1/current/next.json`);
+                const resData = await response.json();
+                const nextRace = resData.MRData.RaceTable.Races[0];
+                const raceKey = `${nextRace.season}_${nextRace.round}`;
+
+                await updateDoc(userRef, {
+                    lockedTeam: {
+                        raceId: raceKey,
+                        drivers: userData.team,
+                        constructor: userData.constructor
+                    }
+                });
+
+                showToast("Laget är nu låst och redo för poäng!");
+                await refreshData();
+                showLeague();
+            } catch (e) {
+                showToast("Kunde inte låsa laget.");
+            }
         };
 
         async function showLeague() {
