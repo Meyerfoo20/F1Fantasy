@@ -418,7 +418,7 @@
                 const userSnap = await getDoc(userRef);
                 const uData = userSnap.data();
 
-                // 1. Hämta senaste resultat från API:et först för att veta vilket race det gäller
+                // 1. Hämta senaste avklarade race från API:et
                 const infoRes = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/results.json`);
                 const infoData = await infoRes.json();
                 const raceInfo = infoData.MRData.RaceTable.Races[0];
@@ -429,25 +429,26 @@
                 const round = parseInt(raceInfo.round);
                 const currentRaceName = `${raceInfo.raceName} ${season}`;
 
-                // 2. Kontrollera om vi redan har gett poäng för detta race
+                // 2. Kontrollera om poängen redan har delats ut för detta specifika race
                 if (uData.lastRaceName === currentRaceName) {
-                    console.log("Poäng för detta race är redan utdelade.");
+                    console.log("Poäng redan utdelade för:", currentRaceName);
                     return 0;
                 }
 
-                // 3. Bestäm vilket lag som ska ge poäng. 
-                // Prioritera 'lockedTeam', men använd nuvarande 'team'/'constructor' om det saknas.
+                // 3. Bestäm vilket lag som ska ge poäng.
+                // Vi använder 'lockedTeam' om användaren sparade manuellt, 
+                // annars tar vi deras nuvarande aktiva lag ('team' och 'constructor').
                 const teamToScore = uData.lockedTeam || {
                     drivers: uData.team || [],
                     constructor: uData.constructor || null
                 };
 
-                // Säkerhetskoll: Har användaren ens ett lag?
+                // Om användaren inte har några förare eller stall alls, avbryt
                 if (!teamToScore.drivers.length && !teamToScore.constructor) {
                     return 0;
                 }
 
-                // 4. Hämta data för Sprint och Kval
+                // 4. Hämta data för Sprint och Kval för poängberäkning
                 let sprintResults = [];
                 try {
                     const sprintRes = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/sprint.json`);
@@ -473,6 +474,7 @@
                     let dPoints = 0;
                     let details = [];
 
+                    // Race-resultat
                     const raceResult = raceResults.find(r => r.Driver.familyName.toLowerCase() === lastName);
                     if (raceResult) {
                         const p = parseInt(raceResult.points) || 0;
@@ -484,6 +486,7 @@
                         }
                     }
 
+                    // Sprint-resultat
                     const sprintResult = sprintResults.find(s => s.Driver.familyName.toLowerCase() === lastName);
                     if (sprintResult) {
                         const sp = parseInt(sprintResult.points) || 0;
@@ -491,16 +494,14 @@
                         if (sp > 0) details.push(`${sp} P (Sprint)`);
                     }
 
+                    // Pole Position
                     const qualyResult = qualyResults.find(q => q.Driver.familyName.toLowerCase() === lastName);
                     if (qualyResult && qualyResult.position === "1") {
                         dPoints += 4;
                         details.push(`4 P (Pole)`);
                     }
 
-                    breakdown.drivers[driverId] = { 
-                        points: dPoints, 
-                        detail: details.length > 0 ? details.join(' + ') : '0 P' 
-                    };
+                    breakdown.drivers[driverId] = { points: dPoints, detail: details.join(' + ') || '0 P' };
                     lastRacePoints += dPoints;
                 });
 
@@ -520,20 +521,19 @@
                     lastRacePoints += totalCPoints;
                 }
 
-                // 7. Uppdatera Firebase
-                // Vi nollställer även lockedTeam här så att användaren kan göra nya byten inför nästa race
+                // 7. Spara de nya poängen i Firebase
                 await updateDoc(userRef, { 
                     seasonTotalPoints: (uData.seasonTotalPoints || 0) + lastRacePoints,
                     lastRacePoints: lastRacePoints,
                     lastRaceName: currentRaceName,
                     pointsBreakdown: breakdown,
-                    lockedTeam: null // Rensa låsningen efter utdelning
+                    lockedTeam: null // Vi rensar låsningen så användaren kan börja planera nästa race direkt
                 });
 
                 return lastRacePoints;
 
             } catch (error) { 
-                console.error("Fel i poängberäkningen:", error); 
+                console.error("Fel vid poängberäkning:", error); 
                 return 0; 
             }
         }
