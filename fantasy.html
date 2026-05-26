@@ -418,28 +418,32 @@
                 const userSnap = await getDoc(userRef);
                 const uData = userSnap.data();
 
-                // 1. Hämta det låsta laget (ögonblicksbilden från när användaren sparade)
-                const lockedTeam = uData.lockedTeam;
-                
-                // Säkerhetskoll: Har användaren ett låst lag?
-                if (!lockedTeam || !lockedTeam.drivers || !lockedTeam.constructor) {
-                    console.log("Inget låst lag hittades för poängberäkning.");
-                    return 0;
-                }
-
-                // 2. Hämta senaste resultat från API:et
+                // 1. Hämta senaste resultat från API:et först för att veta vilket race det gäller
                 const infoRes = await fetch(`https://api.jolpi.ca/ergast/f1/current/last/results.json`);
                 const infoData = await infoRes.json();
                 const raceInfo = infoData.MRData.RaceTable.Races[0];
                 
+                if (!raceInfo) return 0;
+
                 const season = raceInfo.season;
                 const round = parseInt(raceInfo.round);
                 const currentRaceName = `${raceInfo.raceName} ${season}`;
-                const raceKeyFromApi = `${season}_${round}`;
 
-                // 3. Kontrollera om vi redan har gett poäng för detta race
+                // 2. Kontrollera om vi redan har gett poäng för detta race
                 if (uData.lastRaceName === currentRaceName) {
                     console.log("Poäng för detta race är redan utdelade.");
+                    return 0;
+                }
+
+                // 3. Bestäm vilket lag som ska ge poäng. 
+                // Prioritera 'lockedTeam', men använd nuvarande 'team'/'constructor' om det saknas.
+                const teamToScore = uData.lockedTeam || {
+                    drivers: uData.team || [],
+                    constructor: uData.constructor || null
+                };
+
+                // Säkerhetskoll: Har användaren ens ett lag?
+                if (!teamToScore.drivers.length && !teamToScore.constructor) {
                     return 0;
                 }
 
@@ -460,8 +464,8 @@
                 let lastRacePoints = 0;
                 let breakdown = { drivers: {}, constructor: { points: 0, detail: "" } };
 
-                // 5. Räkna poäng för FÖRARE (baserat på lockedTeam.drivers)
-                lockedTeam.drivers.forEach(driverId => {
+                // 5. Räkna poäng för FÖRARE
+                teamToScore.drivers.forEach(driverId => {
                     const driverData = data.drivers.find(d => d.id === driverId);
                     if (!driverData) return;
 
@@ -469,7 +473,6 @@
                     let dPoints = 0;
                     let details = [];
 
-                    // Race-resultat
                     const raceResult = raceResults.find(r => r.Driver.familyName.toLowerCase() === lastName);
                     if (raceResult) {
                         const p = parseInt(raceResult.points) || 0;
@@ -481,7 +484,6 @@
                         }
                     }
 
-                    // Sprint-resultat
                     const sprintResult = sprintResults.find(s => s.Driver.familyName.toLowerCase() === lastName);
                     if (sprintResult) {
                         const sp = parseInt(sprintResult.points) || 0;
@@ -489,7 +491,6 @@
                         if (sp > 0) details.push(`${sp} P (Sprint)`);
                     }
 
-                    // Kval-resultat (Pole Position)
                     const qualyResult = qualyResults.find(q => q.Driver.familyName.toLowerCase() === lastName);
                     if (qualyResult && qualyResult.position === "1") {
                         dPoints += 4;
@@ -503,10 +504,9 @@
                     lastRacePoints += dPoints;
                 });
 
-                // 6. Räkna poäng för KONSTRUKTÖR (baserat på lockedTeam.constructor)
-                const constructorData = data.constructors.find(c => c.id === lockedTeam.constructor);
+                // 6. Räkna poäng för KONSTRUKTÖR
+                const constructorData = data.constructors.find(c => c.id === teamToScore.constructor);
                 if (constructorData) {
-                    // Samla ihop poäng från båda bilarna i stallet
                     const teamRacePoints = raceResults
                         .filter(r => r.Constructor.name.includes(constructorData.team))
                         .reduce((sum, r) => sum + (parseInt(r.points) || 0), 0);
@@ -520,15 +520,16 @@
                     lastRacePoints += totalCPoints;
                 }
 
-                // 7. Uppdatera Firebase med de nya poängen
+                // 7. Uppdatera Firebase
+                // Vi nollställer även lockedTeam här så att användaren kan göra nya byten inför nästa race
                 await updateDoc(userRef, { 
                     seasonTotalPoints: (uData.seasonTotalPoints || 0) + lastRacePoints,
                     lastRacePoints: lastRacePoints,
                     lastRaceName: currentRaceName,
-                    pointsBreakdown: breakdown
+                    pointsBreakdown: breakdown,
+                    lockedTeam: null // Rensa låsningen efter utdelning
                 });
 
-                console.log(`Poäng beräknade för ${currentRaceName}: ${lastRacePoints} poäng.`);
                 return lastRacePoints;
 
             } catch (error) { 
