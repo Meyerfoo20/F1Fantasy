@@ -13,13 +13,10 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    console.log('Background message received:', payload);
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        icon: 'logo.jpg',
-        badge: 'logo.jpg'
+        icon: 'logo.jpg' 
     };
-
     self.registration.showNotification(notificationTitle, notificationOptions);
 });

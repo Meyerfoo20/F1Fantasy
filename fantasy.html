@@ -328,33 +328,36 @@
         };
 
         async function setupNotifications() {
-            try {
-                const permission = await Notification.requestPermission();
-                
-                if (permission === 'granted') {
-                    const token = await getToken(messaging, { 
-                        vapidKey: 'BHHUg27sUKSdxSJDlODAHRZFYSGuKFkfCAI1tsg65OPjW4pHeWOjEg8zds1ozyhxltDftOuKAR_qNcuStnFNVKI' 
-                    });
+    try {
+        if (!('serviceWorker' in navigator)) return;
 
-                    if (token && currentUser) {
-                        const userRef = doc(db, "users", currentUser.uid);
-                        await updateDoc(userRef, { 
-                            fcmToken: token,
-                            notificationsEnabled: true 
-                        });
-                        console.log("Notis-token sparad!");
-                    }
-                } else {
-                    console.log("Användaren nekade notiser.");
-                }
-            } catch (error) {
-                console.error("Fel vid notis-setup:", error);
+        const registration = await navigator.serviceWorker.register('/F1Fantasy/firebase-messaging-sw.js', {
+            scope: '/F1Fantasy/'
+        });
+        
+        console.log("Service Worker registrerad med scope:", registration.scope);
+
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+            const token = await getToken(messaging, { 
+                vapidKey: 'BHHUg27sUKSdxSJDlODAHRZFYSGuKFkfCAI1tsg65OPjW4pHeWOjEg8zds1ozyhxltDftOuKAR_qNcuStnFNVKI',
+                serviceWorkerRegistration: registration 
+            });
+
+            if (token && currentUser) {
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, { 
+                    fcmToken: token,
+                    notificationsEnabled: true 
+                });
+                console.log("Notis-token sparad!");
             }
         }
-
-        onMessage(messaging, (payload) => {
-            showToast(`NOTIS: ${payload.notification.title}`);
-        });
+    } catch (error) {
+        console.error("Fel vid notis-setup:", error);
+    }
+}
 
         const data = {
             drivers: [
