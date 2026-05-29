@@ -290,13 +290,13 @@
     </main>
 
     <script type="module">
+        // 1. Importera allt först
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-        const messaging = getMessaging(app);
-
+        // 2. Definiera konfigurationen
         const firebaseConfig = {
             apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
             authDomain: "f1-fantasy-e8204.firebaseapp.com",
@@ -306,7 +306,11 @@
             appId: "1:952247160192:web:57bd2653326d5c7c7ec565"
         };
 
+        // 3. Initiera App FÖRST
         const app = initializeApp(firebaseConfig);
+
+        // 4. Initiera sedan Messaging och andra tjänster med app-variabeln
+        const messaging = getMessaging(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
