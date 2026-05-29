@@ -293,6 +293,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+
+        const messaging = getMessaging(app);
 
         const firebaseConfig = {
             apiKey: "AIzaSyAskluSUlzitU5eW6iQ6Jrw6GTXMtlu0-c",
@@ -319,6 +322,35 @@
             'Aston Martin': '#229971', 'Alpine': '#0093CC', 'RB': '#6692FF',
             'Haas': '#B6BABD', 'Williams': '#64C4FF'
         };
+
+        async function setupNotifications() {
+            try {
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    const token = await getToken(messaging, { 
+                        vapidKey: 'DIN_GENERERADE_VAPID_NYCKEL_HÄR' 
+                    });
+
+                    if (token && currentUser) {
+                        const userRef = doc(db, "users", currentUser.uid);
+                        await updateDoc(userRef, { 
+                            fcmToken: token,
+                            notificationsEnabled: true 
+                        });
+                        console.log("Notis-token sparad!");
+                    }
+                } else {
+                    console.log("Användaren nekade notiser.");
+                }
+            } catch (error) {
+                console.error("Fel vid notis-setup:", error);
+            }
+        }
+
+        onMessage(messaging, (payload) => {
+            showToast(`NOTIS: ${payload.notification.title}`);
+        });
 
         const data = {
             drivers: [
@@ -551,6 +583,8 @@
             if (user) {
                 currentUser = user;
                 await refreshData();
+
+                setupNotifications();
                 
                 if (userData) {
                     await calculatePointsForUser(currentUser.uid);
