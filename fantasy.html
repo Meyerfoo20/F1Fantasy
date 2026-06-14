@@ -835,16 +835,7 @@
             leaderboardBody.innerHTML = allUsers.map((u, i) => {
                 const isCurrentUser = u.uid === currentUser.uid;
                 const newRank = i + 1;
-                const oldRank = u.oldRank || newRank;
                 
-                // Formkurva-indikator (pil upp, pil ner, eller streck)
-                let trendIndicator = `<span class="text-zinc-600 font-bold text-xs leading-none">-</span>`;
-                if (newRank < oldRank) {
-                    trendIndicator = `<span class="text-green-500 font-black text-[10px] flex items-center"><i data-lucide="chevron-up" class="w-3.5 h-3.5 inline"></i></span>`;
-                } else if (newRank > oldRank) {
-                    trendIndicator = `<span class="text-red-500 font-black text-[10px] flex items-center"><i data-lucide="chevron-down" class="w-3.5 h-3.5 inline"></i></span>`;
-                }
-
                 const hasHighestPoints = (u.lastRacePoints || 0) === highestCurrentPoints && highestCurrentPoints > 0;
 
                 let rankDisplay = `<span class="rank-number text-xl md:text-3xl font-black italic tracking-tighter opacity-20">${newRank}</span>`;
@@ -866,10 +857,7 @@
 
                 return `
                 <tr class="group cursor-pointer transition-all duration-500 border-b border-white/[0.03] hover:bg-white/[0.02]" onclick="viewOtherTeam('${u.uid}')">
-                    <td class="py-6 px-1 md:px-3 w-8 text-center">
-                        <div class="flex justify-center">${trendIndicator}</div>
-                    </td>
-                    <td class="py-6 px-2 md:px-4 w-12 md:w-16 text-center">
+                    <td class="py-6 px-2 md:px-6 w-12 md:w-20 text-center">
                         <div class="flex items-center justify-center">${rankDisplay}</div>
                     </td>
                     <td class="py-6 pr-4 md:pr-8">
